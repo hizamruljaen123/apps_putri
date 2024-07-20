@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from IPython.display import display, clear_output
 from matplotlib.animation import FuncAnimation
-from sklearn.cluster import Birch, KMeans
 from sklearn.metrics import silhouette_score
 
 # Connection details
@@ -65,21 +64,23 @@ if connection.is_connected():
     df = execute_query_to_dataframe(connection, query)
     if df is not None and not df.empty:
 
-        def classify_sales(row):
-            if row['Jumlah_Terjual'] <= 2:
+        # Menghitung persentase jumlah terjual dibandingkan dengan jumlah stok
+        df['Persentase_Jumlah_Terjual'] = (df['Jumlah_Terjual'] / df['Jumlah_Stok']) * 100
+
+        # Definisi kategori berdasarkan persentase penjualan
+        def categorize_sales_percentage(percent_sold):
+            if percent_sold < 20:
                 return 'Sangat Rendah'
-            elif row['Jumlah_Terjual'] <= 5:
+            elif percent_sold < 40:
                 return 'Rendah'
-            elif row['Jumlah_Terjual'] <= 10:
+            elif percent_sold < 50:
                 return 'Cukup'
-            elif row['Jumlah_Terjual'] <= 20:
-                return 'Berpotensi Tinggi'
-            elif row['Jumlah_Terjual'] <= 50:
+            elif percent_sold < 80:
                 return 'Tinggi'
             else:
                 return 'Sangat Tinggi'
 
-        df['Kategori_Penjualan'] = df.apply(classify_sales, axis=1)
+        df['Kategori_Penjualan'] = df['Persentase_Jumlah_Terjual'].apply(categorize_sales_percentage)
 
         # Generating random centroids
         np.random.seed(42)  # Ensure reproducibility
@@ -88,12 +89,11 @@ if connection.is_connected():
 
         # Color mapping based on sales categories
         colors = {
-            'Sangat Rendah': 'blue',
+            'Sangat Rendah': 'black',
             'Rendah': 'green',
             'Cukup': 'yellow',
-            'Berpotensi Tinggi': 'orange',
-            'Tinggi': 'red',
-            'Sangat Tinggi': 'purple'
+            'Tinggi': 'grey',
+            'Sangat Tinggi': 'red'
         }
 
         # Initialize plot
@@ -105,35 +105,30 @@ if connection.is_connected():
         ax.set_ylabel('Nilai Y')
         plt.tight_layout()
 
-        # Initialize K-Means for initial centroids
-        kmeans = KMeans(n_clusters=6, n_init='auto')
-        initial_centroids = kmeans.fit(df[['Centroid_X', 'Centroid_Y']])
-        df['Cluster'] = initial_centroids.labels_
-
         def update_plot(frame):
-            global df, iterasi, terpisah, best_silhouette, best_df
-
-            terpisah = True
-            for category, color in colors.items():
-                subset = df[df['Kategori_Penjualan'] == category]
-                if len(subset['Centroid_X'].unique()) > 1 or len(subset['Centroid_Y'].unique()) > 1:
-                    terpisah = False
-                    df.loc[subset.index, 'Centroid_X'] = np.random.uniform(subset['Centroid_X'].min() - 1, subset['Centroid_X'].max() + 1, size=len(subset))
-                    df.loc[subset.index, 'Centroid_Y'] = np.random.uniform(subset['Centroid_Y'].min() - 1, subset['Centroid_Y'].max() + 1, size=len(subset))
+            global df, iterasi, best_silhouette, best_df
 
             # Update clustering using Birch
             birch_model = Birch(n_clusters=None, threshold=0.5)
-            birch_model.fit(df[['Centroid_X', 'Centroid_Y']])
-            clusters = birch_model.predict(df[['Centroid_X', 'Centroid_Y']])
+            birch_model.fit(df[['Jumlah_Stok', 'Jumlah_Terjual', 'Harga_Satuan_Rp', 'Persentase_Jumlah_Terjual']])
+            clusters = birch_model.predict(df[['Jumlah_Stok', 'Jumlah_Terjual', 'Harga_Satuan_Rp', 'Persentase_Jumlah_Terjual']])
             df['Cluster'] = clusters
 
-            silhouette_avg = silhouette_score(df[['Centroid_X', 'Centroid_Y']], clusters)
+            silhouette_avg = silhouette_score(df[['Jumlah_Stok', 'Jumlah_Terjual', 'Harga_Satuan_Rp', 'Persentase_Jumlah_Terjual']], clusters)
 
             if silhouette_avg > best_silhouette:
                 best_silhouette = silhouette_avg
                 best_df = df.copy()
 
-            if iterasi % 5 == 0:
+            # Update centroids dynamically based on changes in clusters or data
+            for category, color in colors.items():
+                subset = df[df['Kategori_Penjualan'] == category]
+                if len(subset['Centroid_X'].unique()) > 1 or len(subset['Centroid_Y'].unique()) > 1:
+                    df.loc[subset.index, 'Centroid_X'] = np.random.uniform(subset['Centroid_X'].min() - 1, subset['Centroid_X'].max() + 1, size=len(subset))
+                    df.loc[subset.index, 'Centroid_Y'] = np.random.uniform(subset['Centroid_Y'].min() - 1, subset['Centroid_Y'].max() + 1, size=len(subset))
+
+            # Print and save best result every 4 iterations
+            if iterasi % 4 == 0:
                 clear_output(wait=True)
                 print(f"Iterasi {iterasi}: Silhouette Score = {best_silhouette:.6f}")
 
@@ -146,7 +141,6 @@ if connection.is_connected():
 
             return scatter,
 
-        terpisah = False
         iterasi = 0
         best_silhouette = -1
         best_df = pd.DataFrame()
