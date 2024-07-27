@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from IPython.display import display, clear_output
 from matplotlib.animation import FuncAnimation
 from sklearn.metrics import silhouette_score
+from sklearn.cluster import Birch  # Pastikan Anda mengimpor Birch
 
 # Connection details
 host = 'localhost'
@@ -145,10 +146,10 @@ if connection.is_connected():
         best_silhouette = -1
         best_df = pd.DataFrame()
 
-        ani = FuncAnimation(fig, update_plot, interval=500, blit=True)
+        ani = FuncAnimation(fig, update_plot, frames=100, interval=500, blit=True, cache_frame_data=False)  # Tentukan jumlah frame
 
         plt.show()
     else:
-        print("No data found or query execution failed.")
+        print("No data found or query eclsxecution failed.")
 else:
     print("No connection to the database.")
