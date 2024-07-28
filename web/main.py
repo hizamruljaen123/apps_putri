@@ -51,8 +51,11 @@ def categorize_sales_percentage(percent_sold):
         return 'Tinggi'
     else:
         return 'Sangat Tinggi'
-    
+
 def perform_clustering(df, threshold):
+    # Fill NaN values with zero
+    df.fillna(0, inplace=True)
+    
     birch_model = Birch(n_clusters=None, threshold=threshold)
     df_features = df[['Jumlah_Stok', 'Harga_Satuan_Rp', 'Persentase_Jumlah_Terjual']]
     birch_model.fit(df_features)
@@ -61,6 +64,7 @@ def perform_clustering(df, threshold):
     return df
 
 def cluster_with_threshold(df, threshold):
+    df.fillna(0, inplace=True)
     birch_model = Birch(n_clusters=None, threshold=threshold)
     df_features = df[['Jumlah_Stok', 'Harga_Satuan_Rp', 'Persentase_Jumlah_Terjual']]
     birch_model.fit(df_features)
@@ -68,6 +72,9 @@ def cluster_with_threshold(df, threshold):
     df['Cluster'] = clusters
 
 def generate_visualizations(df):
+    df.fillna(0, inplace=True)
+
+    # print(df)
     image_files = {}
     
     # Scatter Plot Klasterisasi
@@ -259,8 +266,6 @@ def fetch_data():
         if connection and connection.is_connected():
             connection.close()
 
-
-
 @app.route('/visualize', methods=['POST'])
 def visualize_data():
     request_data = request.get_json()
@@ -406,3 +411,4 @@ def submit_data():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
