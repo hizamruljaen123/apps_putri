@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from IPython.display import display, clear_output
 from matplotlib.animation import FuncAnimation
 from sklearn.metrics import silhouette_score
-from sklearn.cluster import Birch  # Pastikan Anda mengimpor Birch
+from sklearn.cluster import Birch
 
 # Connection details
 host = 'localhost'
@@ -65,10 +65,26 @@ if connection.is_connected():
     df = execute_query_to_dataframe(connection, query)
     if df is not None and not df.empty:
 
-        # Menghitung persentase jumlah terjual dibandingkan dengan jumlah stok
+        # Check for missing values
+        print("Checking for NaN values:")
+        print(df.isna().sum())
+
+        # Check for infinite values in columns that exist after processing
+        df[['Jumlah_Stok', 'Jumlah_Terjual', 'Harga_Satuan_Rp']] = df[['Jumlah_Stok', 'Jumlah_Terjual', 'Harga_Satuan_Rp']].apply(pd.to_numeric, errors='coerce')
+        df = df.dropna(subset=['Jumlah_Stok', 'Jumlah_Terjual', 'Harga_Satuan_Rp'])
+
+        # Calculate sales percentage
         df['Persentase_Jumlah_Terjual'] = (df['Jumlah_Terjual'] / df['Jumlah_Stok']) * 100
 
-        # Definisi kategori berdasarkan persentase penjualan
+        # Check for infinite values after adding 'Persentase_Jumlah_Terjual'
+        print("Checking for infinite values:")
+        print(df[['Jumlah_Stok', 'Jumlah_Terjual', 'Harga_Satuan_Rp', 'Persentase_Jumlah_Terjual']].replace([np.inf, -np.inf], np.nan).isna().sum())
+
+        # Handle infinite values
+        df[['Jumlah_Stok', 'Jumlah_Terjual', 'Harga_Satuan_Rp', 'Persentase_Jumlah_Terjual']] = df[['Jumlah_Stok', 'Jumlah_Terjual', 'Harga_Satuan_Rp', 'Persentase_Jumlah_Terjual']].replace([np.inf, -np.inf], np.nan)
+        df = df.dropna(subset=['Persentase_Jumlah_Terjual'])
+
+        # Define sales categories
         def categorize_sales_percentage(percent_sold):
             if percent_sold < 20:
                 return 'Sangat Rendah'
@@ -83,7 +99,7 @@ if connection.is_connected():
 
         df['Kategori_Penjualan'] = df['Persentase_Jumlah_Terjual'].apply(categorize_sales_percentage)
 
-        # Generating random centroids
+        # Generate random centroids
         np.random.seed(42)  # Ensure reproducibility
         df['Centroid_X'] = np.random.uniform(1, 7, size=len(df))
         df['Centroid_Y'] = np.random.uniform(1, 7, size=len(df))
@@ -111,34 +127,38 @@ if connection.is_connected():
 
             # Update clustering using Birch
             birch_model = Birch(n_clusters=None, threshold=0.5)
-            birch_model.fit(df[['Jumlah_Stok', 'Jumlah_Terjual', 'Harga_Satuan_Rp', 'Persentase_Jumlah_Terjual']])
-            clusters = birch_model.predict(df[['Jumlah_Stok', 'Jumlah_Terjual', 'Harga_Satuan_Rp', 'Persentase_Jumlah_Terjual']])
-            df['Cluster'] = clusters
+            try:
+                birch_model.fit(df[['Jumlah_Stok', 'Jumlah_Terjual', 'Harga_Satuan_Rp', 'Persentase_Jumlah_Terjual']])
+                clusters = birch_model.predict(df[['Jumlah_Stok', 'Jumlah_Terjual', 'Harga_Satuan_Rp', 'Persentase_Jumlah_Terjual']])
+                df['Cluster'] = clusters
 
-            silhouette_avg = silhouette_score(df[['Jumlah_Stok', 'Jumlah_Terjual', 'Harga_Satuan_Rp', 'Persentase_Jumlah_Terjual']], clusters)
+                silhouette_avg = silhouette_score(df[['Jumlah_Stok', 'Jumlah_Terjual', 'Harga_Satuan_Rp', 'Persentase_Jumlah_Terjual']], clusters)
 
-            if silhouette_avg > best_silhouette:
-                best_silhouette = silhouette_avg
-                best_df = df.copy()
+                if silhouette_avg > best_silhouette:
+                    best_silhouette = silhouette_avg
+                    best_df = df.copy()
 
-            # Update centroids dynamically based on changes in clusters or data
-            for category, color in colors.items():
-                subset = df[df['Kategori_Penjualan'] == category]
-                if len(subset['Centroid_X'].unique()) > 1 or len(subset['Centroid_Y'].unique()) > 1:
-                    df.loc[subset.index, 'Centroid_X'] = np.random.uniform(subset['Centroid_X'].min() - 1, subset['Centroid_X'].max() + 1, size=len(subset))
-                    df.loc[subset.index, 'Centroid_Y'] = np.random.uniform(subset['Centroid_Y'].min() - 1, subset['Centroid_Y'].max() + 1, size=len(subset))
+                # Update centroids dynamically based on changes in clusters or data
+                for category, color in colors.items():
+                    subset = df[df['Kategori_Penjualan'] == category]
+                    if len(subset['Centroid_X'].unique()) > 1 or len(subset['Centroid_Y'].unique()) > 1:
+                        df.loc[subset.index, 'Centroid_X'] = np.random.uniform(subset['Centroid_X'].min() - 1, subset['Centroid_X'].max() + 1, size=len(subset))
+                        df.loc[subset.index, 'Centroid_Y'] = np.random.uniform(subset['Centroid_Y'].min() - 1, subset['Centroid_Y'].max() + 1, size=len(subset))
 
-            # Print and save best result every 4 iterations
-            if iterasi % 4 == 0:
-                clear_output(wait=True)
-                print(f"Iterasi {iterasi}: Silhouette Score = {best_silhouette:.6f}")
+                # Print and save best result every 4 iterations
+                if iterasi % 4 == 0:
+                    clear_output(wait=True)
+                    print(f"Iterasi {iterasi}: Silhouette Score = {best_silhouette:.6f}")
 
-            iterasi += 1
-            ax.clear()
-            scatter = ax.scatter(df['Centroid_X'], df['Centroid_Y'], c=df['Kategori_Penjualan'].apply(lambda x: colors[x]), alpha=0.6)
-            ax.set_title(f'Pemisahan Data Berdasarkan Kategori Penjualan (Iterasi {iterasi}, Silhouette Score: {silhouette_avg:.2f})')
-            ax.set_xlabel('Nilai X')
-            ax.set_ylabel('Nilai Y')
+                iterasi += 1
+                ax.clear()
+                scatter = ax.scatter(df['Centroid_X'], df['Centroid_Y'], c=df['Kategori_Penjualan'].apply(lambda x: colors[x]), alpha=0.6)
+                ax.set_title(f'Pemisahan Data Berdasarkan Kategori Penjualan (Iterasi {iterasi}, Silhouette Score: {silhouette_avg:.2f})')
+                ax.set_xlabel('Nilai X')
+                ax.set_ylabel('Nilai Y')
+
+            except ValueError as e:
+                print(f"ValueError during clustering: {e}")
 
             return scatter,
 
@@ -150,6 +170,6 @@ if connection.is_connected():
 
         plt.show()
     else:
-        print("No data found or query eclsxecution failed.")
+        print("No data found or query execution failed.")
 else:
     print("No connection to the database.")

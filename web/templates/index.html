@@ -6,6 +6,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   </head>
   <body class="bg-gray-100">
     <div class="flex min-h-screen">
@@ -28,9 +29,18 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
         </svg>
         </button>
+        <div class="w-full max-w-sm p-4">
+          <div class="grid grid-cols-2 gap-4">
+              <button onclick="showData('tm_store')" class="bg-blue-500 text-white py-2 px-4 rounded w-full">TM Store</button>
+              <button onclick="showData('jaya_com')" class="bg-green-500 text-white py-2 px-4 rounded w-full">Jaya Com</button>
+          </div>
+      </div>
       </div>
       <!-- Combined Card -->
       <div class="bg-white p-6 rounded-lg shadow mb-6">
+        <div id="loading-screen" class="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50 hidden">
+          <img src="https://www.davidkingsbury.co.uk/wp-content/uploads/2021/08/lg.ring-loading-gif.gif" alt="Loading..." class="w-16 h-16">
+      </div>
         <h2 class="text-xl font-bold mb-4">Statistik Penjualan</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <!-- Counters -->
@@ -53,7 +63,7 @@
             <div class="bg-red-100 p-4 rounded-lg shadow">
               <h3 class="text-lg font-bold text-red-600">Cluster</h3>
               <div class="text-3xl font-bold text-gray-900" id="unique-cluster">0</div>
-              <span class="text-gray-500">Jumlah Cluster</span>
+              <span class="text-gray-500">Jumlah Titik Cluster</span>
             </div>
           </div>
           <!-- Table -->
@@ -92,23 +102,36 @@
           <div id="tab-cluster" class="p-4">
             <h2 class="text-xl font-bold mb-4">Data Cluster</h2>
             <div class="overflow-x-auto overflow-y-auto h-96">
-              <table class="min-w-full bg-white text-sm">
-                <thead>
-                  <tr class="bg-gray-200 text-gray-600 uppercase text-xs leading-normal">
-                    <th class="py-3 px-4 text-left">No</th>
-                    <th class="py-3 px-4 text-left">Cluster</th>
-                    <th class="py-3 px-4 text-left">Kategori Penjualan</th>
-                    <th class="py-3 px-4 text-left">Bulan</th>
-                    <th class="py-3 px-4 text-left">Merek</th>
-                    <th class="py-3 px-4 text-left">Persentase Jumlah Terjual</th>
-                    <th class="py-3 px-4 text-left">Tipe</th>
-                  </tr>
-                </thead>
-                <tbody id="data-table-cluster" class="text-gray-600 text-xs font-light">
-                  <!-- Data will be appended here by JavaScript -->
-                </tbody>
-              </table>
+              <div class="overflow-x-auto">
+                 <!-- Pagination controls -->
+                
+                <table class="min-w-full bg-white text-sm">
+                    <thead>
+                        <tr class="bg-gray-200 text-gray-600 uppercase text-xs leading-normal">
+                            <th class="py-3 px-4 text-left">No</th>
+                            <th class="py-3 px-4 text-left">Cluster</th>
+                            <th class="py-3 px-4 text-left">Kategori Penjualan</th>
+                            <th class="py-3 px-4 text-left">Bulan</th>
+                            <th class="py-3 px-4 text-left">Merek</th>
+                            <th class="py-3 px-4 text-left">Persentase Jumlah Terjual</th>
+                            <th class="py-3 px-4 text-left">Tipe</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data-table-cluster" class="text-gray-600 text-xs font-light">
+                        <!-- Data akan dimuat di sini oleh JavaScript -->
+                    </tbody>
+                </table>
+              </div>
+              <br>
+            
+            
+           
+            
             </div>
+            <br>
+            <div id="pagination" class="flex justify-center items-center mt-6 w-full">
+              <!-- Pagination links will be appended here by JavaScript -->
+          </div>
           </div>
           <div id="tab-penjualan" class="p-4 hidden">
             <h2 class="text-xl font-bold mb-4">Data Penjualan</h2>
@@ -247,36 +270,106 @@
   
 <!-- JS Scripts -->
 <script>
-function openModalInput() {
-document.getElementById('input-modal').classList.remove('hidden');
-document.getElementById('form-container').classList.remove('hidden');
-document.getElementById('data-penjualan-form').classList.remove('hidden');
-document.getElementById('data-spesifikasi-form').classList.remove('hidden');
+ // Fetch and format sales data
+ async function fetchSalesData(tabId, tableId) {
+        try {
+            const response = await fetch('/fetch-data');
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (result.status !== 'success') {
+                throw new Error(result.error || 'Unknown error occurred');
+            }
+
+            const data = result.data;
+
+            const tableContainer = document.getElementById(`${tableId}-container`);
+            tableContainer.innerHTML = ''; // Clear existing table data
+
+            let tableHTML = `
+                <table class="min-w-full bg-white text-sm">
+                    <thead>
+                        <tr class="bg-gray-200 text-gray-600 uppercase text-xs leading-normal">
+                            <th class="py-3 px-4 text-left">No</th>
+                            <th class="py-3 px-4 text-left">Merek</th>
+                            <th class="py-3 px-4 text-left">Tipe</th>
+                            ${tableId === 'data-table-penjualan' ? `
+                                <th class="py-3 px-4 text-left">Bulan</th>
+                                <th class="py-3 px-4 text-left">Jumlah Stok</th>
+                                <th class="py-3 px-4 text-left">Jumlah Terjual</th>
+                                <th class="py-3 px-4 text-left">Harga Satuan Rp</th>
+                                <th class="py-3 px-4 text-left">Total Penjualan Rp</th>
+                            ` : `
+                                <th class="py-3 px-4 text-left">Kamera Utama MP</th>
+                                <th class="py-3 px-4 text-left">Kamera Depan MP</th>
+                                <th class="py-3 px-4 text-left">RAM</th>
+                                <th class="py-3 px-4 text-left">Memori Internal</th>
+                                <th class="py-3 px-4 text-left">Baterai mAh</th>
+                                <th class="py-3 px-4 text-left">Jenis Layar</th>
+                            `}
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600 text-xs font-light">
+            `;
+
+            data.forEach((item, index) => {
+                tableHTML += `
+                    <tr class="border-b border-gray-200 hover:bg-gray-100">
+                        <td class="py-3 px-6 text-left">${index + 1}</td>
+                        <td class="py-3 px-6 text-left">${item.Merek || '-'}</td>
+                        <td class="py-3 px-6 text-left">${item.Tipe || '-'}</td>
+                        ${tableId === 'data-table-penjualan' ? `
+                            <td class="py-3 px-6 text-left">${item.Bulan || '-'}</td>
+                            <td class="py-3 px-6 text-left">${item.Jumlah_Stok || '-'}</td>
+                            <td class="py-3 px-6 text-left">${item.Jumlah_Terjual || '-'}</td>
+                            <td class="py-3 px-6 text-left">${formatRupiah(item.Harga_Satuan_Rp) || '-'}</td>
+                            <td class="py-3 px-6 text-left">${formatRupiah(item.Total_Penjualan_Rp) || '-'}</td>
+                        ` : `
+                            <td class="py-3 px-6 text-left">${item.Kamera_Utama_MP || '-'}</td>
+                            <td class="py-3 px-6 text-left">${item.Kamera_Depan_MP || '-'}</td>
+                            <td class="py-3 px-6 text-left">${item.RAM || '-'}</td>
+                            <td class="py-3 px-6 text-left">${item.Memori_Internal || '-'}</td>
+                            <td class="py-3 px-6 text-left">${item.Baterai_mAh || '-'}</td>
+                            <td class="py-3 px-6 text-left">${item.Jenis_Layar || '-'}</td>
+                        `}
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+
+            tableContainer.innerHTML = tableHTML;
+
+            // Show the appropriate tab content
+            document.querySelectorAll('#tab-content > div').forEach(div => div.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+        } catch (error) {
+            console.error('Error fetching sales data:', error);
+            // Optionally, display error message to user
+            const errorMessage = document.getElementById('error-message');
+            if (errorMessage) {
+                errorMessage.textContent = `Failed to fetch data: ${error.message}`;
+                errorMessage.style.display = 'block';
+            }
+        }
+    }
+
+    function formatRupiah(value) {
+    // Replace null with 0
+    if (value === null) {
+        value = 0;
+    }
+    
+    // Convert the value to a locale string in Indonesian Rupiah format
+    return value.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' });
 }
-function closeInputModal() {
-document.getElementById('input-modal').classList.add('hidden');
-document.getElementById('form-container').classList.add('hidden');
-}
-function openModal(title, imagePath) {
-const modalTitle = document.getElementById('modal-title');
-const modalImage = document.getElementById('modal-image');
-const imageModal = document.getElementById('image-modal');
-// Set the title and image source
-modalTitle.textContent = title.replace(/_/g, ' ').replace(/(\b[a-z])/g, function(char) { return char.toUpperCase(); });
-modalImage.src = imagePath;
-// Show the modal
-imageModal.classList.remove('hidden');
-}
-// Function to close the modal
-function closeModal() {
-document.getElementById('image-modal').classList.add('hidden');
-}
-// Optional: Add event listener to close modal when clicking outside the modal content
-document.getElementById('image-modal').addEventListener('click', function(event) {
-if (event.target === this) {
-closeModal();
-}
-});
 </script>
 </body>
 </html>
