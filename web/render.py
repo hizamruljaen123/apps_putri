@@ -1,54 +1,44 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, render_template, request
 import mysql.connector
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import numpy as np
 from sklearn.cluster import Birch
-import os
-import uuid
 from sklearn.manifold import TSNE
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 import plotly
+import numpy as np
 import json
 
 app = Flask(__name__)
 
-# Create uploads directory if it doesn't exist
-if not os.path.exists('static/uploads'):
-    os.makedirs('static/uploads')
+# Koneksi ke database
+def establish_connection():
+    return mysql.connector.connect(
+        host='localhost',
+        user='root',
+        password='',
+        database='data_smartphone',
+        port=3306
+    )
 
-# Database connection details
-DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': '',
-    'database': 'data_smartphone',
-    'port': 3306
-}
-
-def get_db_connection():
-    try:
-        connection = mysql.connector.connect(**DB_CONFIG)
-        return connection
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
-        return None
-
-def execute_query_to_dataframe(connection, query, params=None):
+# Eksekusi query dan konversi ke DataFrame
+def execute_query_to_dataframe(connection, query):
     try:
         cursor = connection.cursor(dictionary=True)
-        cursor.execute(query, params)
+        cursor.execute(query)
         result = cursor.fetchall()
-        df = pd.DataFrame(result)
-        return df
+        return pd.DataFrame(result)
     except mysql.connector.Error as err:
         print(f"Error: {err}")
         return None
     finally:
         cursor.close()
 
+# Menangani nilai yang hilang
+def handle_missing_values(df):
+    df.fillna({'': 0, np.number: 0}, inplace=True)
+
+# Kategorisasi persentase penjualan
 def categorize_sales_percentage(percent_sold):
     if percent_sold < 10:
         return 'Sangat Rendah'
@@ -61,18 +51,7 @@ def categorize_sales_percentage(percent_sold):
     else:
         return 'Sangat Tinggi'
 
-def perform_clustering(df, threshold):
-    # Fill NaN values with zero
-    df.fillna(0, inplace=True)
-    
-    birch_model = Birch(n_clusters=None, threshold=threshold)
-    df_features = df[['Jumlah_Stok', 'Harga_Satuan_Rp', 'Persentase_Jumlah_Terjual']]
-    birch_model.fit(df_features)
-    clusters = birch_model.predict(df_features)
-    df['Cluster'] = clusters
-    return df
-
-
+# Visualisasi distribusi penjualan
 def visualize_sales_distribution_combined(df):
     color_mapping = {
         'Sangat Rendah': 'blue',
@@ -269,13 +248,10 @@ def visualize_clusters_3d(df, clusters):
 
     return fig
 
-def handle_missing_values(df):
-    df.fillna({'': 0, np.number: 0}, inplace=True)
-
 @app.route('/visualisasi')
-def visualisasi():
+def index():
     store = request.args.get('store', 'Jaya Com')
-    connection = get_db_connection()
+    connection = establish_connection()
     query = f"""
     SELECT
         data.toko as Toko,
@@ -348,122 +324,6 @@ def visualisasi():
                                store=store)
 
     return "No data available"
-@app.route('/perform-clustering', methods=['POST'])
-def perform_clustering_route():
-    request_data = request.get_json()
-    store_name = request_data.get('store')
-    threshold = request_data.get('threshold', 0.3)
-
-    if not store_name:
-        return jsonify({"error": "Store name is required"}), 400
-    
-    store_name = map_store_name(store_name)
-
-    query = """
-    SELECT 
-        data.Merek,
-        data.Tipe,
-        data.Bulan,
-        data.Jumlah_Stok,
-        data.Jumlah_Terjual,
-        data.Harga_Satuan_Rp,
-        data.Total_Penjualan_Rp,
-        data_spesifikasi.Kamera_Utama_MP,
-        data_spesifikasi.Kamera_Depan_MP,
-        data_spesifikasi.RAM,
-        data_spesifikasi.Memori_Internal,
-        data_spesifikasi.Baterai_mAh,
-        data_spesifikasi.Jenis_Layar
-    FROM 
-        data
-    LEFT JOIN 
-        data_spesifikasi 
-    ON 
-        data.Tipe = data_spesifikasi.Tipe
-    WHERE 
-        data.toko = %s;
-    """
-    
-    connection = get_db_connection()
-    if connection and connection.is_connected():
-        df = execute_query_to_dataframe(connection, query, (store_name,))
-        if df is not None and not df.empty:
-            df['Persentase_Jumlah_Terjual'] = (df['Jumlah_Terjual'] / df['Jumlah_Stok']) * 100
-            df['Kategori_Penjualan'] = df['Persentase_Jumlah_Terjual'].apply(categorize_sales_percentage)
-            df = perform_clustering(df, threshold)
-            
-            response_data = df[['Merek', 'Tipe', 'Bulan', 'Persentase_Jumlah_Terjual', 'Kategori_Penjualan', 'Cluster']].to_dict(orient='records')
-            return jsonify({"message": "Clustering performed", "data": response_data})
-        else:
-            return jsonify({"error": "Data not found"}), 404
-    else:
-        return jsonify({"error": "Failed to connect to the database"}), 500
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/submit-data', methods=['POST'])
-def submit_data():
-    data = request.json
-
-    store_name = data.get('store')
-    data_spec = data.get('dataSpec')
-    data_penjualan = data.get('dataPenjualan')
-
-    if not store_name or not data_spec or not data_penjualan:
-        return jsonify({'status': 'error', 'message': 'Store name, data specification, and sales data are required'}), 400
-
-    connection = get_db_connection()
-    if connection and connection.is_connected():
-        cursor = connection.cursor()
-        try:
-            # Insert into data_spesifikasi
-            cursor.execute("""
-                INSERT INTO data_spesifikasi (Merek, Tipe, Kamera_Utama_MP, Kamera_Depan_MP, RAM, Memori_Internal, Baterai_mAh, Jenis_Layar)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                data_spec['Merek'],
-                data_spec['Tipe'],
-                data_spec['Kamera_Utama_MP'],
-                data_spec['Kamera_Depan_MP'],
-                data_spec['RAM'],
-                data_spec['Memori_Internal'],
-                data_spec['Baterai_mAh'],
-                data_spec['Jenis_Layar']
-            ))
-
-            # Insert into data
-            cursor.execute("""
-                INSERT INTO data (store, Jumlah_Terjual, Total_Penjualan_Rp, Merek, Tipe, Bulan, Jumlah_Stok)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (
-                store_name,
-                data_penjualan['Jumlah_Penjualan'],
-                data_penjualan['Total_Penjualan'],
-                data_spec['Merek'],
-                data_spec['Tipe'],
-                data_penjualan['Bulan'],
-                data_penjualan['Jumlah_Stok']
-            ))
-
-            connection.commit()
-            return jsonify({'status': 'success'}), 200
-        except Exception as e:
-            connection.rollback()
-            return jsonify({'status': 'error', 'message': str(e)}), 500
-        finally:
-            cursor.close()
-            connection.close()
-    else:
-        return jsonify({'status': 'error', 'message': 'Failed to connect to the database'}), 500
-
-def map_store_name(store_name):
-    store_name_map = {
-        'tm_store': 'TM Store',
-        'jaya_com': 'Jaya Com'
-    }
-    return store_name_map.get(store_name, store_name)
 
 if __name__ == '__main__':
     app.run(debug=True)

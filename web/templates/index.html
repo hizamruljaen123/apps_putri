@@ -16,6 +16,7 @@
         <nav>
           <ul>
             <li class="mb-2"><a href="#" class="text-gray-300 hover:text-white">Home</a></li>
+            <li class="mb-2"><a href="/visualisasi" class="text-gray-300 hover:text-white">Visualisasi Data</a></li>
             <li class="mb-2"><button onclick="openModalInput()" class="text-gray-300 hover:text-white">New Smartphone Data</a></li>
           </ul>
         </nav>
@@ -123,10 +124,7 @@
                 </table>
               </div>
               <br>
-            
-            
-           
-            
+  
             </div>
             <br>
             <div id="pagination" class="flex justify-center items-center mt-6 w-full">
@@ -147,10 +145,7 @@
           </div>
         </div>
       </div>
-      <!-- Visualization Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6" id="visualization-cards">
-        <!-- Visualization images will be appended here by JavaScript -->
-      </div>
+      
     </div>
   </div>
   <!-- Modal -->
@@ -370,6 +365,7 @@
     // Convert the value to a locale string in Indonesian Rupiah format
     return value.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' });
 }
+
 </script>
 </body>
 </html>

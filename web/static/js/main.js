@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+
     // Toggle sidebar visibility
     function toggleSidebar() {
         var sidebar = document.getElementById('sidebar');
@@ -92,9 +92,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
         }, 2000); // Delay for 2 seconds
     }
-
-    // Attach the submit handler to the form
-    document.getElementById('form-data').addEventListener('submit', submitData);
 
     // Fetch data and display in table
     let currentPage = 1;
@@ -235,59 +232,6 @@ function updateSummaryData(data) {
     }
 }
 
-// Fetch visualizations
-async function fetchVisualizations(storeName) {
-    try {
-        // Construct the URL for the POST request
-        const url = `/visualize`;
-
-        let response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                "store": storeName,
-                "threshold_start": 0.1,
-                "threshold_end": 0.5,
-                "num_iterations": 5
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-
-        let data = await response.json();
-        let images = data.images;
-        let visualizationCards = document.getElementById('visualization-cards');
-
-        visualizationCards.innerHTML = ''; // Clear existing visualization cards
-
-        for (let key in images) {
-            if (images.hasOwnProperty(key)) {
-                let imagePath = images[key];
-                let card = `
-                    <div class="bg-white p-4 rounded-lg shadow">
-                        <h3 class="text-lg font-bold mb-2">${key.replace(/_/g, ' ').replace(/(\b[a-z])/g, function(char) { return char.toUpperCase(); })}</h3>
-                        <img src="${imagePath}" alt="${key}" class="w-full h-48 object-contain cursor-pointer" onclick="openModal('${key}', '${imagePath}')">
-                    </div>
-                `;
-                visualizationCards.innerHTML += card;
-            }
-        }
-    } catch (error) {
-        console.error('Error fetching visualizations:', error);
-    }
-}
-
-// Call functions when the document is ready
-function showData(storeName) {
-    fetchDataAndDisplay(storeName);
-    fetchVisualizations(storeName);
-}
-
-showData('tm_store');
 
     // Tab navigation
     document.querySelectorAll('ul > li > button').forEach(tab => {
@@ -319,10 +263,7 @@ showData('tm_store');
         closeModalInput();
     }
 
-    // Attach open and close modal handlers
-    document.getElementById('open-modal-btn').addEventListener('click', openModalInput);
-    document.getElementById('close-modal-btn').addEventListener('click', closeModalInput);
-});
+
 
 function openModalInput() {
     document.getElementById('input-modal').classList.remove('hidden');
@@ -352,9 +293,9 @@ function openModal(title, imagePath) {
 function closeModal() {
     document.getElementById('image-modal').classList.add('hidden');
 }
-// Optional: Add event listener to close modal when clicking outside the modal content
-document.getElementById('image-modal').addEventListener('click', function(event) {
-    if (event.target === this) {
-        closeModal();
-    }
-});
+
+   
+showData('tm_store');
+function showData(storeName) {
+    fetchDataAndDisplay(storeName);
+}
