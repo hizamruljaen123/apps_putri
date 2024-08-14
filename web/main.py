@@ -12,6 +12,8 @@ import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 import plotly
 import json
+import logging
+
 
 app = Flask(__name__)
 
@@ -457,6 +459,108 @@ def submit_data():
             connection.close()
     else:
         return jsonify({'status': 'error', 'message': 'Failed to connect to the database'}), 500
+@app.route('/fetch-data/<nama_toko>', methods=['GET'])
+def fetch_data(nama_toko):
+    # Mapping nama_toko dari URL ke nama toko yang sesuai di database
+    toko_mapping = {
+        "jaya_com": "Jaya Com",
+        "tm_store": "TM Store"
+    }
+
+    # Konversi nama_toko yang diterima menjadi format yang sesuai
+    nama_toko_db = toko_mapping.get(nama_toko.lower())
+
+    if not nama_toko_db:
+        return jsonify({"error": "Invalid store name"}), 400
+
+    logging.info(f"Fetching data for store: {nama_toko_db}")
+
+    # Membuat query SQL untuk mengambil data dari database dengan filter berdasarkan nama toko
+    query = """
+    SELECT 
+       data.toko as Toko,
+        data.Merek,
+        data.Tipe,
+        data.Bulan,
+        data.tahun,
+        data.Jumlah_Stok,
+        data.Jumlah_Terjual,
+        data.Harga_Satuan_Rp,
+        data.Total_Penjualan_Rp,
+        data_spesifikasi.Kamera_Utama_MP,
+        data_spesifikasi.Kamera_Depan_MP,
+        data_spesifikasi.RAM,
+        data_spesifikasi.Memori_Internal,
+        data_spesifikasi.Baterai_mAh,
+        data_spesifikasi.Jenis_Layar
+    FROM 
+        data
+    LEFT JOIN 
+        data_spesifikasi 
+    ON 
+        data.Tipe = data_spesifikasi.Tipe
+    WHERE 
+        data.toko = %s;
+    """
+
+    # Koneksi ke database
+    connection = get_db_connection()
+
+    try:
+        # Eksekusi query dengan parameter nama_toko_db
+        df = execute_query_to_dataframe(connection, query, (nama_toko_db,))
+        logging.info(f"Query executed, number of rows retrieved: {len(df)}")
+    except Exception as e:
+        logging.error(f"Error executing query: {e}")
+        return jsonify({"error": "Error fetching data"}), 500
+    finally:
+        # Tutup koneksi
+        connection.close()
+
+    if df is not None and not df.empty:
+        # Ganti NaN dengan string kosong atau "-"
+        df = df.fillna(value={
+            'Jumlah_Stok': '-',
+            'Jumlah_Terjual': '-',
+            'Harga_Satuan_Rp': '-',
+            'Total_Penjualan_Rp': '-',
+            'Kamera_Utama_MP': '-',
+            'Kamera_Depan_MP': '-',
+            'RAM': '-',
+            'Memori_Internal': '-',
+            'Baterai_mAh': '-',
+            'Jenis_Layar': '-'
+        })
+
+        # Bangun objek JSON dengan key unik
+        data = {}
+        for _, row in df.iterrows():
+            key = f"{row['Merek']}_{row['Tipe']}_{row['Bulan']}"
+            data[key] = {
+                "Merek": row["Merek"],
+                "Tipe": row["Tipe"],
+                "Bulan": row["Bulan"],
+                "tahun": row["tahun"],
+                "Jumlah_Stok": row["Jumlah_Stok"],
+                "Jumlah_Terjual": row["Jumlah_Terjual"],
+                "Harga_Satuan_Rp": row["Harga_Satuan_Rp"],
+                "Total_Penjualan_Rp": row["Total_Penjualan_Rp"],
+                "Kamera_Utama_MP": row["Kamera_Utama_MP"],
+                "Kamera_Depan_MP": row["Kamera_Depan_MP"],
+                "RAM": row["RAM"],
+                "Memori_Internal": row["Memori_Internal"],
+                "Baterai_mAh": row["Baterai_mAh"],
+                "Jenis_Layar": row["Jenis_Layar"]
+            }
+
+        # Mengembalikan data sebagai JSON terstruktur
+        return jsonify({"data": data, "message": "Data fetched successfully"})
+    else:
+        logging.warning(f"No data found for store: {nama_toko_db}")
+        return jsonify({"error": "No data found"}), 404
+
+
+
 
 def map_store_name(store_name):
     store_name_map = {

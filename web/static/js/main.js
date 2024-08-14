@@ -201,7 +201,7 @@ function updateSummaryData(data) {
 
     document.getElementById('unique-merek').textContent = uniqueMerek.size;
     document.getElementById('unique-tipe').textContent = uniqueTipe.size;
-    document.getElementById('unique-bulan').textContent = (uniqueBulan.size) - 1;
+    document.getElementById('unique-bulan').textContent = (uniqueBulan.size);
     document.getElementById('unique-cluster').textContent = uniqueCluster.size;
 
     // Count categories for Card 2
