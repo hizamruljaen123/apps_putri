@@ -52,3 +52,30 @@
     align-items: center;
     z-index: 50;
 }
+.category-card {
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border-radius: 0.5rem;
+}
+.sangat-rendah {
+    background-color: #ffe0e0;
+}
+.rendah {
+    background-color: #fff3e0;
+}
+.cukup {
+    background-color: #fffde7;
+}
+.tinggi {
+    background-color: #e8f5e9;
+}
+.sangat-tinggi {
+    background-color: #e0f7fa;
+}
+
+.content {
+    background-color: #e7e7e7;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

@@ -16,12 +16,12 @@
         <h2 class="text-2xl font-bold mb-4">Visualisasi Data</h2>
         <nav>
           <ul>
-            <li class="mb-2"><a href="#" class="text-gray-300 hover:text-white">Home</a></li>
+            <li class="mb-2"><a href="/" class="text-gray-300 hover:text-white">Home</a></li>
             <li class="mb-2"><a href="/visualisasi/" class="text-gray-300 hover:text-white">Visualisasi Data</a></li>
-           
           </ul>
         </nav>
       </div>
+      
       <!-- Main Content -->
       <div class="flex-1 p-6">
         <div class="container mx-auto p-4">
@@ -31,34 +31,48 @@
                 <a href="/visualisasi?store=Jaya+Com" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">Jaya Com</a>
                 <a href="/visualisasi?store=TM+Store" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">TM Store</a>
             </div>
+
+            
+            
+
     
+            <!-- Sales Distribution Plot -->
             <div id="sales_distribution" class="mb-6"></div>
             <script>
                 var graphs = {{ graphJSON_sales_distribution|safe }};
                 Plotly.newPlot('sales_distribution', graphs.data, graphs.layout);
             </script>
     
+            <!-- Clusters TSNE Plot -->
             <div id="clusters_tsne" class="mb-6"></div>
             <script>
                 var graphs = {{ graphJSON_clusters_tsne|safe }};
                 Plotly.newPlot('clusters_tsne', graphs.data, graphs.layout);
             </script>
     
+            <!-- TSNE by Brand Plot -->
             <div id="tsne_by_brand" class="mb-6"></div>
             <script>
                 var graphs = {{ graphJSON_tsne_by_brand|safe }};
                 Plotly.newPlot('tsne_by_brand', graphs.data, graphs.layout);
             </script>
     
+            <!-- 3D Clusters Plot -->
             <div id="clusters_3d" class="mb-6"></div>
             <script>
                 var graphs = {{ graphJSON_clusters_3d|safe }};
                 Plotly.newPlot('clusters_3d', graphs.data, graphs.layout);
             </script>
+
+            <!-- New TSNE per Tahun Plot -->
+            <div id="tsne_per_tahun" class="mb-6"></div>
+            <script>
+                var graphs = {{ graphJSON_tsne_per_tahun|safe }};
+                Plotly.newPlot('tsne_per_tahun', graphs.data, graphs.layout);
+            </script>
+
         </div>
-        
       </div>
-      <!-- Combined Card -->
     </div>
   </body>
 </html>

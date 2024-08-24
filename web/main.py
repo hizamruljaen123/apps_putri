@@ -10,6 +10,7 @@ import uuid
 from sklearn.manifold import TSNE
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
+import plotly.express as px
 import plotly
 import json
 import logging
@@ -75,6 +76,8 @@ def perform_clustering(df, threshold):
     return df
 
 
+
+
 def visualize_sales_distribution_combined(df):
     color_mapping = {
         'Sangat Rendah': 'blue',
@@ -104,7 +107,7 @@ def visualize_sales_distribution_combined(df):
     fig = go.Figure(data=bar_data)
     fig.update_layout(
         barmode='stack',
-        title=f'Distribusi Kategori Penjualan per Merek Untuk {df["Toko"].iloc[0]}',
+        title=f'Distribusi Frekuensi Kemunculan Kategori Penjualan per Merek Untuk {df["Toko"].iloc[0]}  2020 - 2024',
         xaxis_title='Merek',
         yaxis_title='Jumlah Produk',
         height=900
@@ -122,7 +125,7 @@ def visualize_clusters_tsne(df):
     tsne = TSNE(n_components=2, random_state=42)
     X_tsne = tsne.fit_transform(X_normalized)
     
-    df_plot = df[['Merek', 'Tipe', 'Kategori_Penjualan']].copy()
+    df_plot = df[['Merek', 'Tipe', 'Kategori_Penjualan', 'Bulan', 'Tahun']].copy()
     df_plot['x'] = X_tsne[:, 0]
     df_plot['y'] = X_tsne[:, 1]
     
@@ -142,21 +145,22 @@ def visualize_clusters_tsne(df):
             y=category_data['y'],
             mode='markers',
             marker=dict(size=8, color=color_map.get(category, 'grey'), opacity=0.7),
-            text=category_data['Merek'] + ' - ' + category_data['Tipe'] + '<br>Kategori: ' + category,
+            text=category_data['Merek'] + ' - ' + category_data['Tipe'] + '<br>Kategori: ' + category +
+                 '<br>Bulan: ' + category_data['Bulan'].astype(str) + '<br>Tahun: ' + category_data['Tahun'].astype(str),
             hoverinfo='text',
             name=category
         ))
 
     fig.update_layout(
-        title=f'Visualisasi t-SNE Berdasarkan Kategori Penjualan {df["Toko"].iloc[0]}',
+        title=f'Visualisasi t-SNE Berdasarkan Kategori Penjualan {df["Toko"].iloc[0]} 2020 - 2024',
         xaxis_title='t-SNE Dimension 1',
         yaxis_title='t-SNE Dimension 2',
         legend_title='Kategori Penjualan',
         height=800
-        # width=1000
     )
 
     return fig
+
 
 # Visualisasi t-SNE berdasarkan merek
 def visualize_tsne_by_brand(df, clusters):
@@ -198,7 +202,8 @@ def visualize_tsne_by_brand(df, clusters):
                 y=df_merek['y'], 
                 mode='markers', 
                 marker=dict(size=6, color=[color_map[cluster] for cluster in df_merek['Cluster']], opacity=0.7),
-                text=df_merek['Tipe'] + '<br>Kategori: ' + df_merek['Kategori_Penjualan'],
+                text=df_merek['Tipe'] + '<br>Kategori: ' + df_merek['Kategori_Penjualan'] +
+                     '<br>Bulan: ' + df_merek['Bulan'].astype(str) + '<br>Tahun: ' + df_merek['Tahun'].astype(str),
                 hoverinfo='text',
                 showlegend=False
             ),
@@ -206,12 +211,13 @@ def visualize_tsne_by_brand(df, clusters):
         )
 
     fig.update_layout(
-        title_text=f"Visualisasi t-SNE Berdasarkan Merek {df['Toko'].iloc[0]}",
+        title_text=f"Visualisasi t-SNE Berdasarkan Merek {df['Toko'].iloc[0]} 2020 - 2024",
         height=600 * rows,
         showlegend=False
     )
 
     return fig
+
 
 # Visualisasi 3D berdasarkan cluster
 def visualize_clusters_3d(df, clusters):
@@ -227,7 +233,7 @@ def visualize_clusters_3d(df, clusters):
     tsne = TSNE(n_components=3, random_state=42)
     X_tsne = tsne.fit_transform(X_normalized)
     
-    df_plot = df[['Merek', 'Tipe', 'Kategori_Penjualan']].copy()
+    df_plot = df[['Merek', 'Tipe', 'Kategori_Penjualan', 'Bulan', 'Tahun']].copy()
     df_plot['x'] = X_tsne[:, 0]
     df_plot['y'] = X_tsne[:, 1]
     df_plot['z'] = X_tsne[:, 2]
@@ -251,13 +257,14 @@ def visualize_clusters_3d(df, clusters):
             z=cluster_data['z'],
             mode='markers',
             marker=dict(size=4, color=color_map[cluster], opacity=0.7),
-            text=cluster_data['Merek'] + ' - ' + cluster_data['Tipe'] + '<br>Kategori: ' + cluster_data['Kategori_Penjualan'],
+            text=cluster_data['Merek'] + ' - ' + cluster_data['Tipe'] + '<br>Kategori: ' + cluster_data['Kategori_Penjualan'] +
+                 '<br>Bulan: ' + cluster_data['Bulan'].astype(str) + '<br>Tahun: ' + cluster_data['Tahun'].astype(str),
             hoverinfo='text',
             name=f'Cluster {cluster}'
         ))
 
     fig.update_layout(
-        title='Visualisasi 3D 5 Cluster Utama BIRCH menggunakan t-SNE',
+        title='Visualisasi 3D 5 Cluster Utama BIRCH menggunakan t-SNE 2020 - 2024',
         scene=dict(
             xaxis_title='t-SNE Dimension 1',
             yaxis_title='t-SNE Dimension 2',
@@ -265,91 +272,155 @@ def visualize_clusters_3d(df, clusters):
         ),
         legend_title='Clusters',
         height=800,
-        # width=1000,
         margin=dict(r=20, b=10, l=10, t=40)
     )
 
     return fig
 
+# Visualisasi t-SNE per tahun
+def visualize_tsne_per_tahun(df):
+    features = ['Jumlah_Stok', 'Jumlah_Terjual', 'Persentase_Jumlah_Terjual']
+    df_numeric = df[features].copy()
+    df_numeric = df_numeric.fillna(df_numeric.median())
+    X_normalized = (df_numeric.values - df_numeric.values.mean(axis=0)) / df_numeric.values.std(axis=0)
+
+    tsne = TSNE(n_components=2, random_state=42)
+    X_tsne = tsne.fit_transform(X_normalized)
+
+    df['x'] = X_tsne[:, 0]
+    df['y'] = X_tsne[:, 1]
+
+    years = df['Tahun'].unique()
+    rows = (len(years) + 1) // 2  # Atur baris berdasarkan jumlah tahun
+    fig = make_subplots(
+        rows=rows, cols=2,
+        subplot_titles=[f"Tahun {year}" for year in years],
+        vertical_spacing=0.1,
+        horizontal_spacing=0.1
+    )
+
+    color_map = {
+        'Sangat Rendah': '#FF4136',
+        'Rendah': '#2ECC40',
+        'Cukup': '#0074D9',
+        'Tinggi': '#FF851B',
+        'Sangat Tinggi': '#B10DC9',
+    }
+
+    for i, year in enumerate(years):
+        df_year = df[df['Tahun'] == year]
+        row = (i // 2) + 1
+        col = (i % 2) + 1
+
+        for category in df_year['Kategori_Penjualan'].unique():
+            category_data = df_year[df_year['Kategori_Penjualan'] == category]
+            fig.add_trace(go.Scatter(
+                x=category_data['x'],
+                y=category_data['y'],
+                mode='markers',
+                marker=dict(size=8, color=color_map.get(category, 'grey'), opacity=0.7),
+                text=category_data['Merek'] + ' - ' + category_data['Tipe'] + '<br>Kategori: ' + category +
+                     '<br>Bulan: ' + category_data['Bulan'].astype(str) + '<br>Tahun: ' + category_data['Tahun'].astype(str),
+                hoverinfo='text',
+                name=category
+            ), row=row, col=col)
+
+    fig.update_layout(
+        title='Visualisasi t-SNE Berdasarkan Tahun',
+        height=600 * rows,
+        showlegend=False
+    )
+
+    return fig
+
+
+
+
+
+
 def handle_missing_values(df):
     df.fillna({'': 0, np.number: 0}, inplace=True)
-
 @app.route('/visualisasi')
 def visualisasi():
     store = request.args.get('store', 'Jaya Com')
     connection = get_db_connection()
+
     query = f"""
-    SELECT
-        data.toko as Toko,
-        data.Merek,
-        data.Tipe,
-        data.Bulan,
-        data.tahun,
-        data.Jumlah_Stok,
-        data.Jumlah_Terjual,
-        data.Harga_Satuan_Rp,
-        data.Total_Penjualan_Rp,
-        data_spesifikasi.Kamera_Utama_MP,
-        data_spesifikasi.Kamera_Depan_MP,
-        data_spesifikasi.RAM,
-        data_spesifikasi.Memori_Internal,
-        data_spesifikasi.Baterai_mAh,
-        data_spesifikasi.Jenis_Layar
-    FROM 
-        data
-    LEFT JOIN 
-        data_spesifikasi 
-    ON 
-        data.Tipe = data_spesifikasi.Tipe
-    WHERE 
-        data.toko = '{store}'
+        SELECT 
+            IFNULL(data.Merek, '-') AS Merek,
+            IFNULL(data.Tipe, '-') AS Tipe,
+            IFNULL(data.Bulan, '-') AS Bulan,
+            IFNULL(data.Tahun, '-') AS Tahun,
+            IFNULL(CAST(data.Jumlah_Stok AS DECIMAL(10,2)), 0) AS Jumlah_Stok,
+            IFNULL(CAST(data.Jumlah_Terjual AS DECIMAL(10,2)), 0) AS Jumlah_Terjual,
+            IFNULL(CAST(data.Harga_Satuan_Rp AS DECIMAL(15,2)), 0) AS Harga_Satuan_Rp,
+            IFNULL(CAST((data.Jumlah_Terjual * data.Harga_Satuan_Rp) AS DECIMAL(20,2)), 0) AS total_penjualan,
+            IFNULL(data.toko, '-') AS Toko,
+            IFNULL(CAST(data_spesifikasi.Kamera_Utama_MP AS DECIMAL(5,2)), 0) AS Kamera_Utama_MP,
+            IFNULL(CAST(data_spesifikasi.Kamera_Depan_MP AS DECIMAL(5,2)), 0) AS Kamera_Depan_MP,
+            IFNULL(data_spesifikasi.RAM, '-') AS RAM,
+            IFNULL(data_spesifikasi.Memori_Internal, '-') AS Memori_Internal,
+            IFNULL(CAST(data_spesifikasi.Baterai_mAh AS DECIMAL(10,2)), 0) AS Baterai_mAh,
+            IFNULL(data_spesifikasi.Jenis_Layar, '-') AS Jenis_Layar
+        FROM data
+        LEFT JOIN 
+            data_spesifikasi 
+        ON 
+            data.Tipe = data_spesifikasi.Tipe
+        WHERE data.toko = %s
     """
-    df = execute_query_to_dataframe(connection, query)
+    df = execute_query_to_dataframe(connection, query, (store,))
 
     if df is not None and not df.empty:
-        # Cek apakah kolom 'Toko' ada di DataFrame
-        if 'Toko' not in df.columns:
-            return "Error: Kolom 'Toko' tidak ditemukan dalam data."
+        # Konversi kolom numerik untuk memastikan penanganan sebagai float
+        df['Jumlah_Stok'] = df['Jumlah_Stok'].astype(float)
+        df['Jumlah_Terjual'] = df['Jumlah_Terjual'].astype(float)
+        df['Harga_Satuan_Rp'] = df['Harga_Satuan_Rp'].astype(float)
+        df['total_penjualan'] = df['total_penjualan'].astype(float)
 
-        columns_needed = ['Merek', 'Tipe', 'Jumlah_Stok', 'Jumlah_Terjual',
-                          'Harga_Satuan_Rp', 'Total_Penjualan_Rp',
-                          'Kamera_Utama_MP', 'Kamera_Depan_MP', 'RAM',
-                          'Memori_Internal', 'Baterai_mAh', 'Jenis_Layar', 'Bulan', 'tahun']
-
+        # Hanya kolom-kolom yang diperlukan
+        columns_needed = ['Merek', 'Tipe', 'Jumlah_Stok', 'Jumlah_Terjual', 'Harga_Satuan_Rp', 'total_penjualan', 'Bulan', 'Tahun']
         df_klastering = df[columns_needed].copy()
+
         df_klastering['Persentase_Jumlah_Terjual'] = (df_klastering['Jumlah_Terjual'] / df_klastering['Jumlah_Stok']) * 100
 
+        # Visualisasi dan clustering
         handle_missing_values(df_klastering)
         df_klastering['Kategori_Penjualan'] = df_klastering['Persentase_Jumlah_Terjual'].apply(categorize_sales_percentage)
 
         birch_model = Birch(n_clusters=5, threshold=0.5)
         df_features = df_klastering[['Jumlah_Stok', 'Jumlah_Terjual', 'Persentase_Jumlah_Terjual']]
         birch_model.fit(df_features)
-
         clusters = birch_model.predict(df_features)
         df_klastering['Cluster'] = clusters
 
-        # Tambahkan kolom 'Toko' ke df_klastering
         df_klastering['Toko'] = store
 
+        # Visualisasi yang berbeda
         fig_sales_distribution = visualize_sales_distribution_combined(df_klastering)
         fig_clusters_tsne = visualize_clusters_tsne(df_klastering)
         fig_tsne_by_brand = visualize_tsne_by_brand(df_klastering, clusters)
         fig_clusters_3d = visualize_clusters_3d(df_klastering, clusters)
+        fig_tsne_per_tahun = visualize_tsne_per_tahun(df_klastering)
 
+        # Convert to JSON for rendering in HTML
         graphJSON_sales_distribution = json.dumps(fig_sales_distribution, cls=plotly.utils.PlotlyJSONEncoder)
         graphJSON_clusters_tsne = json.dumps(fig_clusters_tsne, cls=plotly.utils.PlotlyJSONEncoder)
         graphJSON_tsne_by_brand = json.dumps(fig_tsne_by_brand, cls=plotly.utils.PlotlyJSONEncoder)
         graphJSON_clusters_3d = json.dumps(fig_clusters_3d, cls=plotly.utils.PlotlyJSONEncoder)
+        graphJSON_tsne_per_tahun = json.dumps(fig_tsne_per_tahun, cls=plotly.utils.PlotlyJSONEncoder)
 
         return render_template('visualization.html',
                                graphJSON_sales_distribution=graphJSON_sales_distribution,
                                graphJSON_clusters_tsne=graphJSON_clusters_tsne,
                                graphJSON_tsne_by_brand=graphJSON_tsne_by_brand,
                                graphJSON_clusters_3d=graphJSON_clusters_3d,
+                               graphJSON_tsne_per_tahun=graphJSON_tsne_per_tahun,
                                store=store)
 
     return "No data available"
+
+
 @app.route('/perform-clustering', methods=['POST'])
 def perform_clustering_route():
     request_data = request.get_json()
@@ -361,45 +432,56 @@ def perform_clustering_route():
     
     store_name = map_store_name(store_name)
 
-    query = """
+    query = f"""
     SELECT 
-        data.Merek,
-        data.Tipe,
-        data.Bulan,
-        data.Jumlah_Stok,
-        data.Jumlah_Terjual,
-        data.Harga_Satuan_Rp,
-        data.Total_Penjualan_Rp,
-        data_spesifikasi.Kamera_Utama_MP,
-        data_spesifikasi.Kamera_Depan_MP,
-        data_spesifikasi.RAM,
-        data_spesifikasi.Memori_Internal,
-        data_spesifikasi.Baterai_mAh,
-        data_spesifikasi.Jenis_Layar
-    FROM 
-        data
+        IFNULL(data.Merek, '-') AS Merek,
+        IFNULL(data.Tipe, '-') AS Tipe,
+        IFNULL(data.Bulan, '-') AS Bulan,
+        IFNULL(data.tahun, '-') AS Tahun,
+        IFNULL(CAST(data.Jumlah_Stok AS DECIMAL(10,2)), 0) AS Jumlah_Stok,
+        IFNULL(CAST(data.Jumlah_Terjual AS DECIMAL(10,2)), 0) AS Jumlah_Terjual,
+        IFNULL(CAST(data.Harga_Satuan_Rp AS DECIMAL(15,2)), 0) AS Harga_Satuan_Rp,
+        IFNULL(CAST((data.Jumlah_Terjual * data.Harga_Satuan_Rp) AS DECIMAL(20,2)), 0) AS total_penjualan,
+        IFNULL(data.toko, '-') AS toko,
+        IFNULL(CAST(data_spesifikasi.Kamera_Utama_MP AS DECIMAL(5,2)), 0) AS Kamera_Utama_MP,
+        IFNULL(CAST(data_spesifikasi.Kamera_Depan_MP AS DECIMAL(5,2)), 0) AS Kamera_Depan_MP,
+        IFNULL(data_spesifikasi.RAM, '-') AS RAM,
+        IFNULL(data_spesifikasi.Memori_Internal, '-') AS Memori_Internal,
+        IFNULL(CAST(data_spesifikasi.Baterai_mAh AS DECIMAL(10,2)), 0) AS Baterai_mAh,
+        IFNULL(data_spesifikasi.Jenis_Layar, '-') AS Jenis_Layar
+    FROM data
     LEFT JOIN 
         data_spesifikasi 
     ON 
         data.Tipe = data_spesifikasi.Tipe
-    WHERE 
-        data.toko = %s;
+    WHERE data.toko = %s
     """
     
     connection = get_db_connection()
     if connection and connection.is_connected():
         df = execute_query_to_dataframe(connection, query, (store_name,))
         if df is not None and not df.empty:
+            # Konversi kolom numerik untuk memastikan penanganan sebagai float
+            df['Jumlah_Stok'] = df['Jumlah_Stok'].astype(float)
+            df['Jumlah_Terjual'] = df['Jumlah_Terjual'].astype(float)
+            df['Harga_Satuan_Rp'] = df['Harga_Satuan_Rp'].astype(float)
+            df['total_penjualan'] = df['total_penjualan'].astype(float)
+            df['Kamera_Utama_MP'] = df['Kamera_Utama_MP'].astype(float)
+            df['Kamera_Depan_MP'] = df['Kamera_Depan_MP'].astype(float)
+            df['Baterai_mAh'] = df['Baterai_mAh'].astype(float)
+
             df['Persentase_Jumlah_Terjual'] = (df['Jumlah_Terjual'] / df['Jumlah_Stok']) * 100
             df['Kategori_Penjualan'] = df['Persentase_Jumlah_Terjual'].apply(categorize_sales_percentage)
             df = perform_clustering(df, threshold)
             
-            response_data = df[['Merek', 'Tipe', 'Bulan', 'Persentase_Jumlah_Terjual', 'Kategori_Penjualan', 'Cluster']].to_dict(orient='records')
+            response_data = df[['Merek', 'Tipe', 'Bulan', 'Persentase_Jumlah_Terjual', 'Kategori_Penjualan', 'Cluster', 'Tahun']].to_dict(orient='records')
             return jsonify({"message": "Clustering performed", "data": response_data})
         else:
             return jsonify({"error": "Data not found"}), 404
     else:
         return jsonify({"error": "Failed to connect to the database"}), 500
+
+
 
 @app.route('/')
 def index():
@@ -478,21 +560,21 @@ def fetch_data(nama_toko):
     # Membuat query SQL untuk mengambil data dari database dengan filter berdasarkan nama toko
     query = """
     SELECT 
-       data.toko as Toko,
-        data.Merek,
-        data.Tipe,
-        data.Bulan,
-        data.tahun,
-        data.Jumlah_Stok,
-        data.Jumlah_Terjual,
-        data.Harga_Satuan_Rp,
-        data.Total_Penjualan_Rp,
-        data_spesifikasi.Kamera_Utama_MP,
-        data_spesifikasi.Kamera_Depan_MP,
-        data_spesifikasi.RAM,
-        data_spesifikasi.Memori_Internal,
-        data_spesifikasi.Baterai_mAh,
-        data_spesifikasi.Jenis_Layar
+        IFNULL(data.toko, '-') AS Toko,
+        IFNULL(data.Merek, '-') AS Merek,
+        IFNULL(data.Tipe, '-') AS Tipe,
+        IFNULL(data.Bulan, '-') AS Bulan,
+        IFNULL(data.tahun, '-') AS Tahun,
+        IFNULL(CAST(data.Jumlah_Stok AS DECIMAL(10,2)), 0) AS Jumlah_Stok,
+        IFNULL(CAST(data.Jumlah_Terjual AS DECIMAL(10,2)), 0) AS Jumlah_Terjual,
+        IFNULL(CAST(data.Harga_Satuan_Rp AS DECIMAL(15,2)), 0) AS Harga_Satuan_Rp,
+        IFNULL(CAST((data.Jumlah_Terjual * data.Harga_Satuan_Rp) AS DECIMAL(20,2)), 0) AS Total_Penjualan_Rp,
+        IFNULL(CAST(data_spesifikasi.Kamera_Utama_MP AS DECIMAL(5,2)), 0) AS Kamera_Utama_MP,
+        IFNULL(CAST(data_spesifikasi.Kamera_Depan_MP AS DECIMAL(5,2)), 0) AS Kamera_Depan_MP,
+        IFNULL(data_spesifikasi.RAM, '-') AS RAM,
+        IFNULL(data_spesifikasi.Memori_Internal, '-') AS Memori_Internal,
+        IFNULL(CAST(data_spesifikasi.Baterai_mAh AS DECIMAL(10,2)), 0) AS Baterai_mAh,
+        IFNULL(data_spesifikasi.Jenis_Layar, '-') AS Jenis_Layar
     FROM 
         data
     LEFT JOIN 
@@ -518,17 +600,17 @@ def fetch_data(nama_toko):
         connection.close()
 
     if df is not None and not df.empty:
-        # Ganti NaN dengan string kosong atau "-"
+        # Ganti NaN dengan angka 0 atau string "-" sesuai dengan jenis datanya
         df = df.fillna(value={
-            'Jumlah_Stok': '-',
-            'Jumlah_Terjual': '-',
-            'Harga_Satuan_Rp': '-',
-            'Total_Penjualan_Rp': '-',
-            'Kamera_Utama_MP': '-',
-            'Kamera_Depan_MP': '-',
+            'Jumlah_Stok': 0,
+            'Jumlah_Terjual': 0,
+            'Harga_Satuan_Rp': 0,
+            'Total_Penjualan_Rp': 0,
+            'Kamera_Utama_MP': 0,
+            'Kamera_Depan_MP': 0,
             'RAM': '-',
             'Memori_Internal': '-',
-            'Baterai_mAh': '-',
+            'Baterai_mAh': 0,
             'Jenis_Layar': '-'
         })
 
@@ -540,25 +622,24 @@ def fetch_data(nama_toko):
                 "Merek": row["Merek"],
                 "Tipe": row["Tipe"],
                 "Bulan": row["Bulan"],
-                "tahun": row["tahun"],
-                "Jumlah_Stok": row["Jumlah_Stok"],
-                "Jumlah_Terjual": row["Jumlah_Terjual"],
-                "Harga_Satuan_Rp": row["Harga_Satuan_Rp"],
-                "Total_Penjualan_Rp": row["Total_Penjualan_Rp"],
-                "Kamera_Utama_MP": row["Kamera_Utama_MP"],
-                "Kamera_Depan_MP": row["Kamera_Depan_MP"],
+                "Tahun": int(row["Tahun"]),
+                "Jumlah_Stok": float(row["Jumlah_Stok"]),
+                "Jumlah_Terjual": float(row["Jumlah_Terjual"]),
+                "Harga_Satuan_Rp": float(row["Harga_Satuan_Rp"]),
+                "Total_Penjualan_Rp": float(row["Total_Penjualan_Rp"]),
+                "Toko": row["Toko"],
+                "Kamera_Utama_MP": float(row["Kamera_Utama_MP"]),
+                "Kamera_Depan_MP": float(row["Kamera_Depan_MP"]),
                 "RAM": row["RAM"],
                 "Memori_Internal": row["Memori_Internal"],
-                "Baterai_mAh": row["Baterai_mAh"],
+                "Baterai_mAh": float(row["Baterai_mAh"]),
                 "Jenis_Layar": row["Jenis_Layar"]
             }
-
         # Mengembalikan data sebagai JSON terstruktur
         return jsonify({"data": data, "message": "Data fetched successfully"})
     else:
         logging.warning(f"No data found for store: {nama_toko_db}")
         return jsonify({"error": "No data found"}), 404
-
 
 
 
