@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/contrib/auto-render.min.js"
-            onload="renderMathInElement(document.body);"></script>
+    onload="renderMathInElement(document.body);"></script>
   </head>
   <body class="bg-gray-100">
     <div class="flex min-h-screen">
@@ -54,22 +54,22 @@
             <h3 class="text-lg font-semibold mb-2">Frekuensi Kemunculan Kategori Penjualan</h3>
             <div class="overflow-x-auto">
               <table class="min-w-full bg-white text-sm">
-                  <thead class="bg-gray-200" id="category-summary-table-header">
-                      <!-- Header tabel akan diisi dinamis oleh JavaScript -->
-                  </thead>
-                  <tbody id="category-summary-table-body">
-                      <!-- Isi tabel akan diisi dinamis oleh JavaScript -->
-                  </tbody>
-                  <tfoot class="bg-gray-100" id="category-summary-table-footer">
-                      <!-- Footer tabel akan diisi dinamis oleh JavaScript -->
-                  </tfoot>
+                <thead class="bg-gray-200" id="category-summary-table-header">
+                  <!-- Header tabel akan diisi dinamis oleh JavaScript -->
+                </thead>
+                <tbody id="category-summary-table-body">
+                  <!-- Isi tabel akan diisi dinamis oleh JavaScript -->
+                </tbody>
+                <tfoot class="bg-gray-100" id="category-summary-table-footer">
+                <!-- Footer tabel akan diisi dinamis oleh JavaScript -->
+                </tfoot>
               </table>
-          </div>
-          <div class="bg-teal-300 p-4 rounded-lg shadow">
-            <h3 class="text-lg font-bold text-orange-600">Total Data</h3>
-            <div class="text-3xl font-bold text-gray-900" id="sum-total-category">0</div>
-            <span class="text-gray-500">Jumlah Data Penjualan</span>
-          </div>
+            </div>
+            <div class="bg-teal-300 p-4 rounded-lg shadow">
+              <h3 class="text-lg font-bold text-orange-600">Total Data</h3>
+              <div class="text-3xl font-bold text-gray-900" id="sum-total-category">0</div>
+              <span class="text-gray-500">Jumlah Data Penjualan</span>
+            </div>
             <div class="bg-green-100 p-4 rounded-lg shadow">
               <h3 class="text-lg font-bold text-green-600">Merek</h3>
               <div class="text-3xl font-bold text-gray-900" id="unique-merek">0</div>
@@ -93,114 +93,113 @@
             <div class="content">
               <h2>Perbedaan Titik Kluster dan Jumlah Data dalam BIRCH</h2>
               <ul>
-                  <li><strong>Titik Kluster:</strong> Dalam BIRCH, titik kluster adalah representasi akhir dari data yang dikelompokkan berdasarkan kemiripan setelah beberapa iterasi.</li>
-                  <li><strong>Jumlah Data:</strong> Jumlah data adalah total sampel yang digunakan untuk proses klusterisasi. Data yang mirip akan dikelompokkan dalam satu titik kluster.</li>
-                  <li><strong>Proses Klusterisasi:</strong> Misalnya, 1000 data bisa dikelompokkan menjadi 10 titik kluster, masing-masing mewakili kelompok data yang mirip.</li>
-                  <li><strong>Kesimpulan:</strong> Titik kluster merupakan hasil pengelompokan data, sedangkan jumlah data menunjukkan berapa banyak sampel yang diproses.</li>
+                <li><strong>Titik Kluster:</strong> Dalam BIRCH, titik kluster adalah representasi akhir dari data yang dikelompokkan berdasarkan kemiripan setelah beberapa iterasi.</li>
+                <li><strong>Jumlah Data:</strong> Jumlah data adalah total sampel yang digunakan untuk proses klusterisasi. Data yang mirip akan dikelompokkan dalam satu titik kluster.</li>
+                <li><strong>Proses Klusterisasi:</strong> Misalnya, 1000 data bisa dikelompokkan menjadi 10 titik kluster, masing-masing mewakili kelompok data yang mirip.</li>
+                <li><strong>Kesimpulan:</strong> Titik kluster merupakan hasil pengelompokan data, sedangkan jumlah data menunjukkan berapa banyak sampel yang diproses.</li>
               </ul>
-          </div>
+            </div>
             
           </div>
           <!-- Table -->
           <div class="flex flex-col">
             
-          <br>
-          <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-bold mb-4">Mengapa Melakukan Pelabelan Berdasarkan Rasio Penjualan?</h2>
-        
-        <p class="text-gray-700 text-lg mb-4">
-            Pelabelan berdasarkan rasio penjualan digunakan untuk memberikan kategori yang lebih adil dalam konteks penjualan produk, terutama produk dengan perbedaan harga yang signifikan seperti smartphone. 
-            Rasio penjualan dihitung dengan membandingkan jumlah unit yang terjual dengan jumlah stok yang disediakan oleh vendor.
-        </p>
-        <h3 class="text-lg font-bold mb-4">Contoh Kasus: iPhone 13 vs Infinix</h3>
-        
-        <p class="text-gray-700 text-lg mb-4">
-            Misalkan kita memiliki dua produk dengan detail berikut:
-        </p>
-        <ul class="list-disc list-inside text-gray-700 mb-4">
-            <li><strong>iPhone 13</strong>: Harga Rp 15.000.000, Stok 10 unit per bulan, Penjualan 8 unit.</li>
-            <li><strong>Infinix</strong>: Harga Rp 2.000.000, Stok 25 unit per bulan, Penjualan 8 unit.</li>
-        </ul>
-            <h2 class="text-xl font-bold mb-4">Perhitungan Rasio Penjualan dan Kategori Penjualan</h2>
-    
-            <p class="text-gray-700 text-lg mb-4">
+            <br>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+              <h2 class="text-xl font-bold mb-4">Mengapa Melakukan Pelabelan Berdasarkan Rasio Penjualan?</h2>
+              
+              <p class="text-gray-700 text-lg mb-4">
+                Pelabelan berdasarkan rasio penjualan digunakan untuk memberikan kategori yang lebih adil dalam konteks penjualan produk, terutama produk dengan perbedaan harga yang signifikan seperti smartphone.
+                Rasio penjualan dihitung dengan membandingkan jumlah unit yang terjual dengan jumlah stok yang disediakan oleh vendor.
+              </p>
+              <h3 class="text-lg font-bold mb-4">Contoh Kasus: iPhone 13 vs Infinix</h3>
+              
+              <p class="text-gray-700 text-lg mb-4">
+                Misalkan kita memiliki dua produk dengan detail berikut:
+              </p>
+              <ul class="list-disc list-inside text-gray-700 mb-4">
+                <li><strong>iPhone 13</strong>: Harga Rp 15.000.000, Stok 10 unit per bulan, Penjualan 8 unit.</li>
+                <li><strong>Infinix</strong>: Harga Rp 2.000.000, Stok 25 unit per bulan, Penjualan 8 unit.</li>
+              </ul>
+              <h2 class="text-xl font-bold mb-4">Perhitungan Rasio Penjualan dan Kategori Penjualan</h2>
+              
+              <p class="text-gray-700 text-lg mb-4">
                 Rasio penjualan digunakan untuk mengukur persentase barang yang terjual dari total stok yang tersedia.
                 Rumus yang digunakan adalah sebagai berikut:
-            </p>
-            <div class="bg-gray-100 p-4 rounded-lg mb-4">
+              </p>
+              <div class="bg-gray-100 p-4 rounded-lg mb-4">
                 <p class="text-lg text-center">Persentase Rumus Rasio Penjualan:</p>
                 <p class="text-center text-xl mt-2">
-                    $$ \text{Rasio Penjualan Perbulan} = \left( \frac{\text{Jumlah Unit Terjual Perbulan}}{\text{Jumlah Stok Perbulan}} \right) \times 100 $$
+                  $$ \text{Rasio Penjualan Perbulan} = \left( \frac{\text{Jumlah Unit Terjual Perbulan}}{\text{Jumlah Stok Perbulan}} \right) \times 100 $$
                 </p>
-            </div>
-    
-            <h3 class="text-lg font-bold mb-4">Kategori Penjualan Berdasarkan Persentase:</h3>
-    
-            <div class="category-card sangat-rendah">
+              </div>
+              
+              <h3 class="text-lg font-bold mb-4">Kategori Penjualan Berdasarkan Persentase:</h3>
+              
+              <div class="category-card sangat-rendah">
                 <h4 class="text-lg font-semibold">Sangat Rendah: < 10%</h4>
                 <p class="text-gray-700">Jika rasio penjualan kurang dari 10%, produk dikategorikan sebagai "Sangat Rendah".</p>
-            </div>
-    
-            <div class="category-card rendah">
+              </div>
+              
+              <div class="category-card rendah">
                 <h4 class="text-lg font-semibold">Rendah: 10% ≤ Rasio Penjualan < 20%</h4>
                 <p class="text-gray-700">Jika rasio penjualan berada di antara 10% hingga kurang dari 20%, produk dikategorikan sebagai "Rendah".</p>
-            </div>
-    
-            <div class="category-card cukup">
+              </div>
+              
+              <div class="category-card cukup">
                 <h4 class="text-lg font-semibold">Cukup: 20% ≤ Rasio Penjualan < 50%</h4>
                 <p class="text-gray-700">Jika rasio penjualan berada di antara 20% hingga kurang dari 50%, produk dikategorikan sebagai "Cukup".</p>
-            </div>
-    
-            <div class="category-card tinggi">
+              </div>
+              
+              <div class="category-card tinggi">
                 <h4 class="text-lg font-semibold">Tinggi: 50% ≤ Rasio Penjualan < 70%</h4>
                 <p class="text-gray-700">Jika rasio penjualan berada di antara 50% hingga kurang dari 70%, produk dikategorikan sebagai "Tinggi".</p>
-            </div>
-    
-            <div class="category-card sangat-tinggi">
+              </div>
+              
+              <div class="category-card sangat-tinggi">
                 <h4 class="text-lg font-semibold">Sangat Tinggi: ≥ 70%</h4>
                 <p class="text-gray-700">Jika rasio penjualan lebih dari atau sama dengan 70%, produk dikategorikan sebagai "Sangat Tinggi".</p>
-            </div>
-    
-            <h3 class="text-lg font-bold mt-8">Contoh Perhitungan:</h3>
-            <p class="text-gray-700 text-lg mb-4">
+              </div>
+              
+              <h3 class="text-lg font-bold mt-8">Contoh Perhitungan:</h3>
+              <p class="text-gray-700 text-lg mb-4">
                 Misalkan ada 100 unit stok produk, dan 55 unit terjual. Maka perhitungannya adalah:
-            </p>
-            <div class="bg-gray-100 p-4 rounded-lg">
+              </p>
+              <div class="bg-gray-100 p-4 rounded-lg">
                 <p class="text-center text-xl">
-                    $$ \text{Rasio Penjualan} = \left( \frac{55}{100} \right) \times 100 = 55\% $$
+                  $$ \text{Rasio Penjualan} = \left( \frac{55}{100} \right) \times 100 = 55\% $$
                 </p>
-            </div>
-    
-            <p class="text-gray-700 text-lg">
+              </div>
+              
+              <p class="text-gray-700 text-lg">
                 Berdasarkan hasil ini, produk tersebut akan dikategorikan sebagai "<strong>Tinggi</strong>" karena rasio penjualannya adalah 55%, yang berada dalam rentang antara 50% hingga kurang dari 70%.
-            </p>
-        </div>
-          
-          
-        
+              </p>
+            </div>
+            
+            
+            
           </div>
           
         </div>
       </div>
       <div class="bg-white p-4 rounded-lg shadow mb-6">
         <h2 class="text-xl font-bold mb-4">Data Clustering Result</h2>
-    
+        
         <!-- Accordion Container for Year and Month -->
         <div id="accordion-container" class="overflow-x-auto overflow-y-auto h-96">
-            <!-- Accordion for Year and Month will be dynamically injected here -->
+          <!-- Accordion for Year and Month will be dynamically injected here -->
         </div>
-    
+        
         <br>
         <div id="pagination" class="flex justify-center items-center mt-6 w-full">
-            <!-- Pagination links will be appended here by JavaScript -->
+          <!-- Pagination links will be appended here by JavaScript -->
         </div>
-    </div>
-    
-     
+      </div>
+      
+      
       <!-- Tabs -->
       <div class="bg-white p-4 rounded-lg shadow mb-6">
         <ul class="flex border-b">
-          
           <li class="mr-1">
             <button class="bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800" onclick="fetchSalesData('tab-penjualan', 'data-table-penjualan', selectedStore)">Daftar Penjualan</button>
           </li>
@@ -208,22 +207,84 @@
             <button class="bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800" onclick="fetchSalesData('tab-spesifikasi', 'data-table-spesifikasi', selectedStore)">Daftar Spesifikasi</button>
           </li>
         </ul>
+        
         <div id="tab-content">
-          
+          <!-- Tab Data Penjualan -->
           <div id="tab-penjualan" class="p-4 hidden">
             <h2 class="text-xl font-bold mb-4">Data Penjualan</h2>
+            
+            <!-- Filter untuk data penjualan -->
+            <div class="filters">
+              <label for="filter-tahun">Filter Tahun:</label>
+              <select id="filter-tahun" onchange="applySalesFilters()">
+                <option value="">Semua</option>
+                <option value="2020">2020</option>
+                <option value="2021">2021</option>
+                <option value="2022">2022</option>
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+              </select>
+              
+              <label for="filter-bulan" class="ml-4">Filter Bulan:</label>
+              <select id="filter-bulan" onchange="applySalesFilters()">
+                <option value="">Semua</option>
+                <option value="Jan">Jan</option>
+                <option value="Feb">Feb</option>
+                <option value="Mar">Mar</option>
+                <option value="Apr">Apr</option>
+                <option value="May">May</option>
+                <option value="Jun">Jun</option>
+                <option value="Jul">Jul</option>
+                <option value="Aug">Aug</option>
+                <option value="Sep">Sep</option>
+                <option value="Oct">Oct</option>
+                <option value="Nov">Nov</option>
+                <option value="Dec">Dec</option>
+              </select>
+              
+              <label for="filter-merek" class="ml-4">Filter Merek:</label>
+              <select id="filter-merek" onchange="applySalesFilters()">
+                <option value="">Semua</option>
+                <option value="Apple">Apple</option> <!-- Sesuaikan dengan data Merek -->
+                <option value="Samsung">Samsung</option>
+                <option value="Xiaomi">Xiaomi</option>
+                <option value="Oppo">Oppo</option>
+                <option value="Huawei">Huawei</option>
+                <option value="Vivo">Vivo</option>
+                <option value="OnePlus">OnePlus</option>
+                <option value="Lenovo">Lenovo</option>
+                <option value="Sony">Sony</option>
+                <option value="Nokia">Nokia</option>
+                <option value="Asus">Asus</option>
+                <option value="Infinix">Infinix</option>
+                <option value="Google">Google</option>
+                <option value="Honor">Honor</option>
+                <option value="ZTE">ZTE</option>
+                <option value="Meizu">Meizu</option>
+                <!-- Tambahkan lebih banyak merek jika ada -->
+              </select>
+            </div>
+            <br>
+            
+            
+            
+            <!-- Tabel Data Penjualan -->
             <div id="data-table-penjualan-container" class="overflow-x-auto overflow-y-auto h-96">
-              <!-- Data will be appended here by JavaScript -->
+              <!-- Data penjualan akan di-render di sini -->
             </div>
           </div>
+          
+          <!-- Tab Data Spesifikasi -->
           <div id="tab-spesifikasi" class="p-4 hidden">
             <h2 class="text-xl font-bold mb-4">Data Spesifikasi</h2>
             <div id="data-table-spesifikasi-container" class="overflow-x-auto overflow-y-auto h-96">
-              <!-- Data will be appended here by JavaScript -->
+              <!-- Data spesifikasi akan di-render di sini -->
             </div>
           </div>
         </div>
       </div>
+      
       
     </div>
   </div>
@@ -275,32 +336,40 @@
         <h3 id="input-modal-title" class="text-lg font-medium leading-6 text-gray-900">Tambah Data Smartphone</h3>
         <div id="input-modal-content" class="mt-2">
           <div id="form-container" class="space-y-4">
-            <form id="form-data" class="space-y-4">
+            <form id="form-data" class="space-y-4" onsubmit="submitData(event)">
               <div class="flex space-x-4">
                 <!-- Data Penjualan Form -->
                 <div id="data-penjualan-form" class="w-1/2">
                   <h4 class="text-lg font-semibold mb-2">Data Penjualan</h4>
                   <div class="grid grid-cols-1 gap-4">
-                    
+                    <div>
+                      <label for="store" class="block text-sm font-medium text-gray-700">Pilih Toko</label>
+                      <select id="toko" name="toko" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                          <option value="">Pilih Toko</option>
+                          <option value="TM Store">TM Store</option>
+                          <option value="Jaya Com">Jaya Com</option>
+                      </select>
+                  </div>
+                  
                     <div>
                       <label for="harga-satuan" class="block text-sm font-medium text-gray-700">Harga Satuan (Rp)</label>
-                      <input type="number" id="harga-satuan" name="harga-satuan" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" oninput="hitungTotalPenjualan()">
+                      <input type="number" id="harga-satuan" name="harga-satuan" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" oninput="hitungTotalPenjualan()">
                     </div>
                     <div>
                       <label for="stok" class="block text-sm font-medium text-gray-700">Stok</label>
-                      <input type="number" id="stok" name="stok" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                      <input type="number" id="stok" name="stok" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                     </div>
                     <div>
                       <label for="unit-terjual" class="block text-sm font-medium text-gray-700">Unit Terjual</label>
-                      <input type="number" id="unit-terjual" name="unit-terjual" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" oninput="hitungTotalPenjualan()">
+                      <input type="number" id="unit-terjual" name="unit-terjual" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" oninput="hitungTotalPenjualan()">
                     </div>
                     <div>
                       <label for="total-penjualan" class="block text-sm font-medium text-gray-700">Total Penjualan (Rp)</label>
-                      <input type="text" id="total-penjualan" name="total-penjualan" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" readonly>
+                      <input type="text" id="total-penjualan" name="total-penjualan" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" readonly>
                     </div>
                     <div>
                       <label for="tahun" class="block text-sm font-medium text-gray-700">Tahun</label>
-                      <select id="tahun" name="tahun" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                      <select id="tahun" name="tahun" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                         <option value="2020">2020</option>
                         <option value="2021">2021</option>
                         <option value="2022">2022</option>
@@ -311,21 +380,22 @@
                     </div>
                     <div>
                       <label for="bulan" class="block text-sm font-medium text-gray-700">Bulan</label>
-                      <select id="bulan" name="bulan" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        <option value="Januari">Januari</option>
-                        <option value="Februari">Februari</option>
-                        <option value="Maret">Maret</option>
-                        <option value="April">April</option>
-                        <option value="Mei">Mei</option>
-                        <option value="Juni">Juni</option>
-                        <option value="Juli">Juli</option>
-                        <option value="Agustus">Agustus</option>
-                        <option value="September">September</option>
-                        <option value="Oktober">Oktober</option>
-                        <option value="November">November</option>
-                        <option value="Desember">Desember</option>
+                      <select id="bulan" name="bulan" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        <option value="Jan">Jan</option>
+                        <option value="Feb">Feb</option>
+                        <option value="Mar">Mar</option>
+                        <option value="Apr">Apr</option>
+                        <option value="May">May</option>
+                        <option value="Jun">Jun</option>
+                        <option value="Jul">Jul</option>
+                        <option value="Aug">Aug</option>
+                        <option value="Sep">Sep</option>
+                        <option value="Oct">Oct</option>
+                        <option value="Nov">Nov</option>
+                        <option value="Dec">Dec</option>
                       </select>
                     </div>
+                    
                   </div>
                 </div>
                 <!-- Data Spesifikasi Form -->
@@ -334,12 +404,11 @@
                   <div class="grid grid-cols-1 gap-4">
                     <div>
                       <label for="tipe" class="block text-sm font-medium text-gray-700">Tipe</label>
-                      <input type="text" id="tipe" name="tipe" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                      <input type="text" id="tipe" name="tipe" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                     </div>
-                    
                     <div>
                       <label for="merek" class="block text-sm font-medium text-gray-700">Merek</label>
-                      <select id="merek" name="merek" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                      <select id="merek" name="merek" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                         <option value="Realme">Realme</option>
                         <option value="Samsung">Samsung</option>
                         <option value="Infinix">Infinix</option>
@@ -354,7 +423,7 @@
                     </div>
                     <div>
                       <label for="ram" class="block text-sm font-medium text-gray-700">RAM</label>
-                      <select id="ram" name="ram" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                      <select id="ram" name="ram" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                         <option value="2 GB">2 GB</option>
                         <option value="4 GB">4 GB</option>
                         <option value="6 GB">6 GB</option>
@@ -364,7 +433,7 @@
                     </div>
                     <div>
                       <label for="memori-internal" class="block text-sm font-medium text-gray-700">Memori Internal</label>
-                      <select id="memori-internal" name="memori-internal" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                      <select id="memori-internal" name="memori-internal" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                         <option value="32 GB">32 GB</option>
                         <option value="64 GB">64 GB</option>
                         <option value="128 GB">128 GB</option>
@@ -375,7 +444,7 @@
                     </div>
                     <div>
                       <label for="kamera-utama" class="block text-sm font-medium text-gray-700">Kamera Utama (MP)</label>
-                      <select id="kamera-utama" name="kamera-utama" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                      <select id="kamera-utama" name="kamera-utama" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                         <option value="12 MP">12 MP</option>
                         <option value="16 MP">16 MP</option>
                         <option value="48 MP">48 MP</option>
@@ -385,7 +454,7 @@
                     </div>
                     <div>
                       <label for="kamera-depan" class="block text-sm font-medium text-gray-700">Kamera Depan (MP)</label>
-                      <select id="kamera-depan" name="kamera-depan" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                      <select id="kamera-depan" name="kamera-depan" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                         <option value="8 MP">8 MP</option>
                         <option value="12 MP">12 MP</option>
                         <option value="16 MP">16 MP</option>
@@ -395,7 +464,7 @@
                     </div>
                     <div>
                       <label for="baterai" class="block text-sm font-medium text-gray-700">Baterai (mAh)</label>
-                      <select id="baterai" name="baterai" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                      <select id="baterai" name="baterai" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                         <option value="3000 mAh">3000 mAh</option>
                         <option value="4000 mAh">4000 mAh</option>
                         <option value="5000 mAh">5000 mAh</option>
@@ -405,7 +474,7 @@
                     </div>
                     <div>
                       <label for="jenis-layar" class="block text-sm font-medium text-gray-700">Jenis Layar</label>
-                      <select id="jenis-layar" name="jenis-layar" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                      <select id="jenis-layar" name="jenis-layar" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                         <option value="LCD">LCD</option>
                         <option value="OLED">OLED</option>
                         <option value="AMOLED">AMOLED</option>
@@ -419,6 +488,7 @@
                 <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 w-full">Save Data</button>
               </div>
             </form>
+            
           </div>
         </div>
       </div>

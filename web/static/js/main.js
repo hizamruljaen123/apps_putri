@@ -42,59 +42,122 @@ function showAlert(type, message) {
 }
 
 // Submit data function
+
+function formatRupiah(value) {
+    // Replace null with 0
+    if (value === null) {
+        value = 0;
+    }
+
+    // Convert the value to a locale string in Indonesian Rupiah format
+    return value.toLocaleString('id-ID', {
+        style: 'currency',
+        currency: 'IDR'
+    });
+}
+// Function to submit form data to the API
 function submitData(event) {
-    event.preventDefault();
+    event.preventDefault(); // Prevent form submission from reloading the page
 
-    // Show loading screen
-    showLoading();
+    // Ambil data dari form
+    const store = document.getElementById('toko').value;
+    const hargaSatuan = parseFloat(document.getElementById('harga-satuan').value) || 0;
+    const stok = parseInt(document.getElementById('stok').value) || 0;
+    const unitTerjual = parseInt(document.getElementById('unit-terjual').value) || 0;
+    const totalPenjualan = parseFloat(document.getElementById('total-penjualan').value.replace(/[^\d]/g, '')) || 0;
+    const tahun = document.getElementById('tahun').value;
+    const bulan = document.getElementById('bulan').value;
 
-    setTimeout(() => {
-        const dataSpec = {
-            Merek: document.getElementById('merek').value,
-            Tipe: document.getElementById('tipe').value,
-            Kamera_Utama_MP: document.getElementById('kamera-utama').value,
-            Kamera_Depan_MP: document.getElementById('kamera-depan').value,
-            RAM: document.getElementById('ram').value,
-            Memori_Internal: document.getElementById('memori-internal').value,
-            Baterai_mAh: document.getElementById('baterai').value,
-            Jenis_Layar: document.getElementById('jenis-layar').value
-        };
+    const tipe = document.getElementById('tipe').value;
+    const merek = document.getElementById('merek').value;
+    const ram = document.getElementById('ram').value;
+    const memoriInternal = document.getElementById('memori-internal').value;
+    const kameraUtama = parseInt(document.getElementById('kamera-utama').value.replace(' MP', '')) || 0;
+    const kameraDepan = parseInt(document.getElementById('kamera-depan').value.replace(' MP', '')) || 0;
+    const baterai = parseInt(document.getElementById('baterai').value.replace(' mAh', '')) || 0;
+    const jenisLayar = document.getElementById('jenis-layar').value;
 
-        const dataPenjualan = {
-            Jumlah_Penjualan: document.getElementById('jumlah-penjualan').value,
-            Total_Penjualan: document.getElementById('total-penjualan').value
-        };
+    // Data penjualan (termasuk toko)
+    const dataPenjualan = {
+        toko: store,  // Toko dimasukkan ke dalam bagian dataPenjualan
+        Harga_Satuan: hargaSatuan,
+        Stok: stok,
+        Unit_Terjual: unitTerjual,
+        Total_Penjualan: totalPenjualan,
+        Tahun: tahun,
+        Bulan: bulan
+    };
 
-        // Send the data to the server
-        fetch('/submit-data', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    dataSpec,
-                    dataPenjualan
-                })
-            })
-            .then(response => response.json())
-            .then(result => {
-                // Hide loading screen
-                hideLoading();
+    // Data spesifikasi
+    const dataSpesifikasi = {
+        Tipe: tipe,
+        Merek: merek,
+        RAM: ram,
+        Memori_Internal: memoriInternal,
+        Kamera_Utama: kameraUtama,
+        Kamera_Depan: kameraDepan,
+        Baterai: baterai,
+        Jenis_Layar: jenisLayar
+    };
 
-                if (result.status === 'success') {
-                    showAlert('success', 'Data successfully submitted!');
-                } else {
-                    showAlert('error', `Error: ${result.message}`);
-                }
-                // Close the modal or handle success
-                document.getElementById('input-modal').classList.add('hidden');
-            })
-            .catch(error => {
-                // Hide loading screen
-                hideLoading();
-                showAlert('error', `Error: ${error.message}`);
-            });
-    }, 2000); // Delay for 2 seconds
+    // Payload yang akan dikirim ke API
+    const payload = {
+        dataPenjualan: dataPenjualan,
+        dataSpesifikasi: dataSpesifikasi
+    };
+
+    // Kirim data ke API via POST request
+    fetch('/submit-data', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.status === 'success') {
+            alert('Data berhasil disimpan!');
+            document.getElementById('form-data').reset(); // Reset form setelah sukses
+        } else {
+            alert(`Error: ${result.message}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat menyimpan data.');
+    });
+}
+// Helper function to calculate total sales automatically
+function hitungTotalPenjualan() {
+    const hargaSatuan = parseFloat(document.getElementById('harga-satuan').value) || 0;
+    const unitTerjual = parseInt(document.getElementById('unit-terjual').value) || 0;
+    const totalPenjualan = hargaSatuan * unitTerjual;
+    document.getElementById('total-penjualan').value = totalPenjualan.toLocaleString('id-ID', {
+        style: 'currency',
+        currency: 'IDR'
+    });
+}
+
+// Function to show loading indication (if applicable)
+function showLoading() {
+    // Add your loading indication code here (e.g., spinner or loading text)
+}
+
+// Function to hide loading indication (if applicable)
+function hideLoading() {
+    // Remove the loading indication code here
+}
+
+// Function to show alerts
+function showAlert(type, message) {
+    // Add your alert notification code here (e.g., popup or toast notification)
+    console.log(`${type}: ${message}`);
+}
+
+// Function to close the input modal
+function closeInputModal() {
+    document.getElementById('input-modal').classList.add('hidden');
 }
 
 // Fetch data and display in table
@@ -446,19 +509,16 @@ function selectStore(storeName) {
     showData(selectedStore);
     
 }
+let allSalesData = []; // Variabel global untuk menyimpan data penjualan dan spesifikasi
 
-
+// Fungsi untuk mengambil data penjualan atau spesifikasi
 async function fetchSalesData(tabId, tableId, namaToko) {
-    
     if (!namaToko) {
         console.error('Nama toko belum dipilih.');
         return;
     }
 
     try {
-       
-        console.log(namaToko)
-        // Mengirim request ke endpoint dengan parameter nama toko
         const response = await fetch(`/fetch-data/${namaToko}`);
 
         if (!response.ok) {
@@ -467,133 +527,140 @@ async function fetchSalesData(tabId, tableId, namaToko) {
 
         const result = await response.json();
 
-        // Periksa apakah data memiliki struktur yang diharapkan
         if (!result.data) {
             throw new Error(result.error || 'Unknown error occurred');
         }
 
-        let data = Object.values(result.data); // Convert data object to array
+        let data = Object.values(result.data); // Konversi data object menjadi array
 
-        // Filter data untuk menghilangkan duplikasi berdasarkan Merek dan Tipe (hanya untuk tabel spesifikasi)
-        if (tableId === 'data-table-spesifikasi') {
-            const uniqueData = {};
-            data = data.filter(item => {
-                const key = `${item.Merek}-${item.Tipe}`;
-                if (!uniqueData[key]) {
-                    uniqueData[key] = true;
-                    return true;
-                }
-                return false;
-            });
-        }
+        // Simpan semua data penjualan ke variabel global
+        allSalesData = data;
 
-        // Urutkan data berdasarkan tahun dan bulan DESC
-        data = data.sort((a, b) => {
-            const [monthA, yearA] = a.Bulan.split(' ');
-            const [monthB, yearB] = b.Bulan.split(' ');
-            const monthOrder = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        // Langsung menerapkan filter jika ada filter yang sudah dipilih
+        applySalesFilters();
 
-            // Urutkan berdasarkan tahun DESC, lalu bulan DESC
-            if (yearA !== yearB) {
-                return parseInt(yearB) - parseInt(yearA);
-            } else {
-                return monthOrder.indexOf(monthB) - monthOrder.indexOf(monthA);
-            }
-        });
-
-        const tableContainer = document.getElementById(`${tableId}-container`);
-        tableContainer.innerHTML = ''; // Clear existing table data
-
-        let tableHTML = `
-            <table class="min-w-full bg-white text-sm">
-                <thead>
-                    <tr class="bg-gray-200 text-gray-600 uppercase text-xs leading-normal">
-                        <th class="py-3 px-4 text-left">No</th>
-                        <th class="py-3 px-4 text-left">Merek</th>
-                        <th class="py-3 px-4 text-left">Tipe</th>
-                        ${tableId === 'data-table-penjualan' ? `
-                            <th class="py-3 px-4 text-left">Bulan</th>
-                            <th class="py-3 px-4 text-left">Tahun</th>
-                            <th class="py-3 px-4 text-left">Jumlah Stok</th>
-                            <th class="py-3 px-4 text-left">Jumlah Terjual</th>
-                            <th class="py-3 px-4 text-left">Harga Satuan Rp</th>
-                            <th class="py-3 px-4 text-left">Total Penjualan Rp</th>
-                        ` : `
-                            <th class="py-3 px-4 text-left">Kamera Utama MP</th>
-                            <th class="py-3 px-4 text-left">Kamera Depan MP</th>
-                            <th class="py-3 px-4 text-left">RAM</th>
-                            <th class="py-3 px-4 text-left">Memori Internal</th>
-                            <th class="py-3 px-4 text-left">Baterai mAh</th>
-                            <th class="py-3 px-4 text-left">Jenis Layar</th>
-                        `}
-                    </tr>
-                </thead>
-                <tbody class="text-gray-600 text-xs font-light">
-        `;
-
-        // Iterasi melalui data yang sudah diurutkan
-        data.forEach((item, index) => {
-            tableHTML += `
-                <tr class="border-b border-gray-200 hover:bg-gray-100">
-                    <td class="py-3 px-6 text-left">${index + 1}</td>
-                    <td class="py-3 px-6 text-left">${item.Merek || '-'}</td>
-                    <td class="py-3 px-6 text-left">${item.Tipe || '-'}</td>
-                    ${tableId === 'data-table-penjualan' ? `
-                        <td class="py-3 px-6 text-left">${item.Bulan || '-'}</td>
-                        <td class="py-3 px-6 text-left">${item.Tahun || '-'}</td>
-                        <td class="py-3 px-6 text-left">${item.Jumlah_Stok || '-'}</td>
-                        <td class="py-3 px-6 text-left">${item.Jumlah_Terjual || '-'}</td>
-                        <td class="py-3 px-6 text-left">${item.Harga_Satuan_Rp || '-'}</td>
-                        <td class="py-3 px-6 text-left">${formatRupiah(item.Total_Penjualan_Rp) || '-'}</td>
-                    ` : `
-                        <td class="py-3 px-6 text-left">${item.Kamera_Utama_MP || '-'}</td>
-                        <td class="py-3 px-6 text-left">${item.Kamera_Depan_MP || '-'}</td>
-                        <td class="py-3 px-6 text-left">${item.RAM || '-'}</td>
-                        <td class="py-3 px-6 text-left">${item.Memori_Internal || '-'}</td>
-                        <td class="py-3 px-6 text-left">${item.Baterai_mAh || '-'}</td>
-                        <td class="py-3 px-6 text-left">${item.Jenis_Layar || '-'}</td>
-                    `}
-                </tr>
-            `;
-        });
-
-        tableHTML += `
-                </tbody>
-            </table>
-        `;
-
-        tableContainer.innerHTML = tableHTML;
-
-        // Show the appropriate tab content
-        document.querySelectorAll('#tab-content > div').forEach(div => div.classList.add('hidden'));
-        document.getElementById(tabId).classList.remove('hidden');
     } catch (error) {
         console.error('Error fetching sales data:', error);
-        // Optionally, display error message to user
-        const errorMessage = document.getElementById('error-message');
-        if (errorMessage) {
-            errorMessage.textContent = `Failed to fetch data: ${error.message}`;
-            errorMessage.style.display = 'block';
+    }
+}
+
+// Fungsi untuk menerapkan filter pada data penjualan atau spesifikasi
+function applySalesFilters() {
+    const filterTahun = document.getElementById('filter-tahun') ? document.getElementById('filter-tahun').value : '';
+    const filterBulan = document.getElementById('filter-bulan') ? document.getElementById('filter-bulan').value : '';
+    const filterMerek = document.getElementById('filter-merek') ? document.getElementById('filter-merek').value : '';
+
+    let filteredData = allSalesData;
+
+    // Jika sedang memfilter penjualan
+    if (document.getElementById('data-table-penjualan-container')) {
+        // Terapkan filter berdasarkan tahun
+        if (filterTahun) {
+            filteredData = filteredData.filter(item => item.Tahun === parseInt(filterTahun));
         }
+
+        // Terapkan filter berdasarkan bulan
+        if (filterBulan) {
+            filteredData = filteredData.filter(item => item.Bulan === filterBulan);
+        }
+
+        // Terapkan filter berdasarkan merek
+        if (filterMerek) {
+            filteredData = filteredData.filter(item => item.Merek === filterMerek);
+        }
+
+        // Render ulang tabel penjualan dengan data yang sudah difilter
+        renderTable(filteredData, 'tab-penjualan', 'data-table-penjualan');
+
+    } else if (document.getElementById('data-table-spesifikasi-container')) {
+        // Jika sedang memfilter spesifikasi (hanya berdasarkan Merek)
+
+        // Terapkan filter berdasarkan merek
+        if (filterMerek) {
+            filteredData = filteredData.filter(item => item.Merek === filterMerek);
+        }
+
+        // Render ulang tabel spesifikasi dengan data yang sudah difilter
+        renderTable(filteredData, 'tab-spesifikasi', 'data-table-spesifikasi');
     }
 }
 
-function formatRupiah(value) {
-    // Replace null with 0
-    if (value === null) {
-        value = 0;
-    }
+// Fungsi untuk merender tabel
+function renderTable(data, tabId, tableId) {
+    const tableContainer = document.getElementById(`${tableId}-container`);
+    tableContainer.innerHTML = ''; // Bersihkan tabel sebelumnya
 
-    // Convert the value to a locale string in Indonesian Rupiah format
-    return value.toLocaleString('id-ID', {
-        style: 'currency',
-        currency: 'IDR'
+    let tableHTML = `
+        <table class="min-w-full bg-white text-sm">
+            <thead>
+                <tr class="bg-gray-200 text-gray-600 uppercase text-xs leading-normal">
+                    <th class="py-3 px-4 text-left">No</th>
+                    <th class="py-3 px-4 text-left">Merek</th>
+                    <th class="py-3 px-4 text-left">Tipe</th>
+                    ${tableId === 'data-table-penjualan' ? `
+                        <th class="py-3 px-4 text-left">Bulan</th>
+                        <th class="py-3 px-4 text-left">Tahun</th>
+                        <th class="py-3 px-4 text-left">Jumlah Stok</th>
+                        <th class="py-3 px-4 text-left">Jumlah Terjual</th>
+                        <th class="py-3 px-4 text-left">Harga Satuan Rp</th>
+                        <th class="py-3 px-4 text-left">Total Penjualan Rp</th>
+                    ` : `
+                        <th class="py-3 px-4 text-left">Kamera Utama MP</th>
+                        <th class="py-3 px-4 text-left">Kamera Depan MP</th>
+                        <th class="py-3 px-4 text-left">RAM</th>
+                        <th class="py-3 px-4 text-left">Memori Internal</th>
+                        <th class="py-3 px-4 text-left">Baterai mAh</th>
+                        <th class="py-3 px-4 text-left">Jenis Layar</th>
+                    `}
+                </tr>
+            </thead>
+            <tbody class="text-gray-600 text-xs font-light">
+    `;
+
+    data.forEach((item, index) => {
+        tableHTML += `
+            <tr class="border-b border-gray-200 hover:bg-gray-100">
+                <td class="py-3 px-6 text-left">${index + 1}</td>
+                <td class="py-3 px-6 text-left">${item.Merek || '-'}</td>
+                <td class="py-3 px-6 text-left">${item.Tipe || '-'}</td>
+                ${tableId === 'data-table-penjualan' ? `
+                    <td class="py-3 px-6 text-left">${item.Bulan || '-'}</td>
+                    <td class="py-3 px-6 text-left">${item.Tahun || '-'}</td>
+                    <td class="py-3 px-6 text-left">${item.Jumlah_Stok || '-'}</td>
+                    <td class="py-3 px-6 text-left">${item.Jumlah_Terjual || '-'}</td>
+                    <td class="py-3 px-6 text-left">${formatRupiah(item.Harga_Satuan_Rp) || '-'}</td>
+                    <td class="py-3 px-6 text-left">${formatRupiah(item.Total_Penjualan_Rp) || '-'}</td>
+                ` : `
+                    <td class="py-3 px-6 text-left">${item.Kamera_Utama_MP || '-'}</td>
+                    <td class="py-3 px-6 text-left">${item.Kamera_Depan_MP || '-'}</td>
+                    <td class="py-3 px-6 text-left">${item.RAM || '-'}</td>
+                    <td class="py-3 px-6 text-left">${item.Memori_Internal || '-'}</td>
+                    <td class="py-3 px-6 text-left">${item.Baterai_mAh || '-'}</td>
+                    <td class="py-3 px-6 text-left">${item.Jenis_Layar || '-'}</td>
+                `}
+            </tr>
+        `;
     });
+
+    tableHTML += `
+            </tbody>
+        </table>
+    `;
+
+    tableContainer.innerHTML = tableHTML;
+
+    // Tampilkan tab yang sesuai
+    document.querySelectorAll('#tab-content > div').forEach(div => div.classList.add('hidden'));
+    document.getElementById(tabId).classList.remove('hidden');
 }
 
-function hitungTotalPenjualan() {
-    const hargaSatuan = document.getElementById('harga-satuan').value || 0;
-    const unitTerjual = document.getElementById('unit-terjual').value || 0;
-    const totalPenjualan = hargaSatuan * unitTerjual;
-    document.getElementById('total-penjualan').value = formatRupiah(totalPenjualan);
+// Fungsi untuk memformat angka menjadi format Rupiah
+function formatRupiah(value) {
+    if (typeof value === 'number') {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+        }).format(value);
+    }
+    return '-';
 }

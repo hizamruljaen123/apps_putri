@@ -491,56 +491,87 @@ def index():
 def submit_data():
     data = request.json
 
-    store_name = data.get('store')
-    data_spec = data.get('dataSpec')
+    # Extract data from request
+    data_spec = data.get('dataSpesifikasi')
     data_penjualan = data.get('dataPenjualan')
 
-    if not store_name or not data_spec or not data_penjualan:
-        return jsonify({'status': 'error', 'message': 'Store name, data specification, and sales data are required'}), 400
+    # Validate incoming data
+    if not data_spec or not data_penjualan:
+        return jsonify({'status': 'error', 'message': 'Specification and sales data are required'}), 400
 
     connection = get_db_connection()
+
     if connection and connection.is_connected():
         cursor = connection.cursor()
+
         try:
-            # Insert into data_spesifikasi
+            # Handle Kamera_Utama_MP
+            if isinstance(data_spec['Kamera_Utama'], str):
+                kamera_utama = int(data_spec['Kamera_Utama'].replace(' MP', '').strip())
+            else:
+                kamera_utama = int(data_spec['Kamera_Utama'])
+
+            # Handle Kamera_Depan_MP
+            if isinstance(data_spec['Kamera_Depan'], str):
+                kamera_depan = int(data_spec['Kamera_Depan'].replace(' MP', '').strip())
+            else:
+                kamera_depan = int(data_spec['Kamera_Depan'])
+
+            # Handle Baterai_mAh
+            if isinstance(data_spec['Baterai'], str):
+                baterai = int(data_spec['Baterai'].replace(' mAh', '').strip())
+            else:
+                baterai = int(data_spec['Baterai'])
+
+            # Insert into data_spesifikasi table
             cursor.execute("""
                 INSERT INTO data_spesifikasi (Merek, Tipe, Kamera_Utama_MP, Kamera_Depan_MP, RAM, Memori_Internal, Baterai_mAh, Jenis_Layar)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 data_spec['Merek'],
                 data_spec['Tipe'],
-                data_spec['Kamera_Utama_MP'],
-                data_spec['Kamera_Depan_MP'],
+                kamera_utama,  # Cleaned value
+                kamera_depan,  # Cleaned value
                 data_spec['RAM'],
                 data_spec['Memori_Internal'],
-                data_spec['Baterai_mAh'],
+                baterai,  # Cleaned value
                 data_spec['Jenis_Layar']
             ))
 
-            # Insert into data
+            # Insert into data table
             cursor.execute("""
-                INSERT INTO data (store, Jumlah_Terjual, Total_Penjualan_Rp, Merek, Tipe, Bulan, Jumlah_Stok)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO data (toko, Merek, Tipe, Bulan, tahun, Jumlah_Stok, Jumlah_Terjual, Harga_Satuan_Rp, Total_Penjualan_Rp)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
-                store_name,
-                data_penjualan['Jumlah_Penjualan'],
-                data_penjualan['Total_Penjualan'],
+                data_penjualan['toko'],  # Toko dimasukkan dari data_penjualan
                 data_spec['Merek'],
                 data_spec['Tipe'],
                 data_penjualan['Bulan'],
-                data_penjualan['Jumlah_Stok']
+                int(data_penjualan['Tahun']),
+                int(data_penjualan['Stok']),
+                int(data_penjualan['Unit_Terjual']),
+                int(data_penjualan['Harga_Satuan']),
+                int(data_penjualan['Total_Penjualan'])
             ))
 
+            # Commit the transaction
             connection.commit()
+
             return jsonify({'status': 'success'}), 200
+
         except Exception as e:
+            # Rollback the transaction if there's an error
             connection.rollback()
             return jsonify({'status': 'error', 'message': str(e)}), 500
+
         finally:
             cursor.close()
             connection.close()
+
     else:
         return jsonify({'status': 'error', 'message': 'Failed to connect to the database'}), 500
+
+
 @app.route('/fetch-data/<nama_toko>', methods=['GET'])
 def fetch_data(nama_toko):
     # Mapping nama_toko dari URL ke nama toko yang sesuai di database

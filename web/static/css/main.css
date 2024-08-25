@@ -79,3 +79,50 @@
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.filters label {
+    font-weight: bold;
+    margin-right: 10px;
+    margin-top: 10px;
+}
+
+.filters select {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    color: #333;
+    margin-right: 20px;
+    margin-top: 5px;
+    font-size: 14px;
+}
+
+.filters select:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.filters select option {
+    padding: 10px;
+}
+
+.filters .ml-4 {
+    margin-left: 20px;
+}
+
+@media (max-width: 768px) {
+    .filters {
+        display: block;
+    }
+    .filters label, .filters select {
+        margin-top: 10px;
+        margin-right: 0;
+    }
+}
