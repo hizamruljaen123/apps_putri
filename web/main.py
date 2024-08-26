@@ -631,6 +631,8 @@ def fetch_data(nama_toko):
         connection.close()
 
     if df is not None and not df.empty:
+        jumlah_data = len(df)
+        
         # Ganti NaN dengan angka 0 atau string "-" sesuai dengan jenis datanya
         df = df.fillna(value={
             'Jumlah_Stok': 0,
@@ -648,7 +650,7 @@ def fetch_data(nama_toko):
         # Bangun objek JSON dengan key unik
         data = {}
         for _, row in df.iterrows():
-            key = f"{row['Merek']}_{row['Tipe']}_{row['Bulan']}"
+            key = f"{row['Merek']}_{row['Tipe']}_{row['Bulan']}_{row['Tahun']}_{row['Toko']}"
             data[key] = {
                 "Merek": row["Merek"],
                 "Tipe": row["Tipe"],
@@ -666,6 +668,7 @@ def fetch_data(nama_toko):
                 "Baterai_mAh": float(row["Baterai_mAh"]),
                 "Jenis_Layar": row["Jenis_Layar"]
             }
+        print(len(data))
         # Mengembalikan data sebagai JSON terstruktur
         return jsonify({"data": data, "message": "Data fetched successfully"})
     else:

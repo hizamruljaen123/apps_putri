@@ -532,7 +532,7 @@ async function fetchSalesData(tabId, tableId, namaToko) {
         }
 
         let data = Object.values(result.data); // Konversi data object menjadi array
-
+       
         // Simpan semua data penjualan ke variabel global
         allSalesData = data;
 
