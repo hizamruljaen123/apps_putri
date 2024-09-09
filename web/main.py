@@ -80,29 +80,33 @@ def perform_clustering(df, threshold):
 
 def visualize_sales_distribution_combined(df):
     color_mapping = {
-        'Sangat Rendah': 'blue',
-        'Rendah': 'green',
-        'Cukup': 'gold',
+        'Sangat Tinggi': 'maroon',
         'Tinggi': 'salmon',
-        'Sangat Tinggi': 'maroon'
+        'Cukup': 'gold',
+        'Rendah': 'green',
+        'Sangat Rendah': 'blue'
     }
-    
+
+    # Urutkan kategori sesuai dengan urutan yang diinginkan
+    kategori_terurut = ['Sangat Tinggi', 'Tinggi', 'Cukup', 'Rendah', 'Sangat Rendah']
+
     kategori_per_merek = df.groupby(['Merek', 'Kategori_Penjualan']).size().unstack(fill_value=0)
     total_per_merek = kategori_per_merek.sum(axis=1)
 
     bar_data = []
-    for kategori in kategori_per_merek.columns:
-        bar_data.append(
-            go.Bar(
-                name=kategori,
-                x=kategori_per_merek.index,
-                y=kategori_per_merek[kategori],
-                marker_color=color_mapping[kategori],
-                text=[f"{count} ({(count / total_per_merek[merek] * 100):.1f}%)" 
-                      for merek, count in zip(kategori_per_merek.index, kategori_per_merek[kategori])],
-                textposition='auto'
+    for kategori in kategori_terurut:
+        if kategori in kategori_per_merek.columns:
+            bar_data.append(
+                go.Bar(
+                    name=kategori,
+                    x=kategori_per_merek.index,
+                    y=kategori_per_merek[kategori],
+                    marker_color=color_mapping[kategori],
+                    text=[f"{count} ({(count / total_per_merek[merek] * 100):.1f}%)" 
+                          for merek, count in zip(kategori_per_merek.index, kategori_per_merek[kategori])],
+                    textposition='auto'
+                )
             )
-        )
 
     fig = go.Figure(data=bar_data)
     fig.update_layout(
@@ -114,6 +118,7 @@ def visualize_sales_distribution_combined(df):
     )
 
     return fig
+
 
 # Visualisasi t-SNE berdasarkan kategori penjualan
 def visualize_clusters_tsne(df):
@@ -163,6 +168,195 @@ def visualize_clusters_tsne(df):
 
 
 # Visualisasi t-SNE berdasarkan merek
+def visualize_clusters_tsne(df):
+    features = ['Jumlah_Stok', 'Jumlah_Terjual', 'Persentase_Jumlah_Terjual']
+    df_numeric = df[features].copy()
+    df_numeric = df_numeric.fillna(df_numeric.median())
+    X_normalized = (df_numeric.values - df_numeric.values.mean(axis=0)) / df_numeric.values.std(axis=0)
+
+    tsne = TSNE(n_components=2, random_state=42)
+    X_tsne = tsne.fit_transform(X_normalized)
+    
+    df_plot = df[['Merek', 'Tipe', 'Kategori_Penjualan', 'Bulan', 'Tahun']].copy()
+    df_plot['x'] = X_tsne[:, 0]
+    df_plot['y'] = X_tsne[:, 1]
+    
+    color_map = {
+        'Sangat Rendah': '#FF4136',
+        'Rendah': '#2ECC40',
+        'Cukup': '#0074D9',
+        'Tinggi': '#FF851B',
+        'Sangat Tinggi': '#B10DC9',
+    }
+
+    # Urutkan kategori dari sangat rendah hingga sangat tinggi
+    kategori_terurut = ['Sangat Rendah', 'Rendah', 'Cukup', 'Tinggi', 'Sangat Tinggi']
+    
+    fig = go.Figure()
+
+    # Tambahkan trace berdasarkan urutan kategori yang telah diurutkan
+    for category in kategori_terurut:
+        if category in df_plot['Kategori_Penjualan'].unique():
+            category_data = df_plot[df_plot['Kategori_Penjualan'] == category]
+            fig.add_trace(go.Scatter(
+                x=category_data['x'],
+                y=category_data['y'],
+                mode='markers',
+                marker=dict(size=8, color=color_map.get(category, 'grey'), opacity=0.7),
+                text=category_data['Merek'] + ' - ' + category_data['Tipe'] + '<br>Kategori: ' + category +
+                     '<br>Bulan: ' + category_data['Bulan'].astype(str) + '<br>Tahun: ' + category_data['Tahun'].astype(str),
+                hoverinfo='text',
+                name=category
+            ))
+
+    fig.update_layout(
+        title=f'Visualisasi t-SNE Berdasarkan Kategori Penjualan {df["Toko"].iloc[0]} 2020 - 2024',
+        xaxis_title='t-SNE Dimension 1',
+        yaxis_title='t-SNE Dimension 2',
+        legend_title='Kategori Penjualan',
+        height=800,
+        legend_traceorder="normal"  # Urutan legend mengikuti data
+    )
+
+    return fig
+
+
+
+# Visualisasi 3D berdasarkan cluster
+def visualize_clusters_3d(df, clusters):
+    features = ['Jumlah_Stok', 'Jumlah_Terjual', 'Persentase_Jumlah_Terjual']
+    df_numeric = df[features].copy()
+    
+    for col in df_numeric.columns:
+        df_numeric[col] = pd.to_numeric(df_numeric[col], errors='coerce')
+    
+    df_numeric = df_numeric.fillna(df_numeric.median())
+    X_normalized = (df_numeric.values - df_numeric.values.mean(axis=0)) / df_numeric.values.std(axis=0)
+    
+    tsne = TSNE(n_components=3, random_state=42)
+    X_tsne = tsne.fit_transform(X_normalized)
+    
+    df_plot = df[['Merek', 'Tipe', 'Kategori_Penjualan', 'Bulan', 'Tahun']].copy()
+    df_plot['x'] = X_tsne[:, 0]
+    df_plot['y'] = X_tsne[:, 1]
+    df_plot['z'] = X_tsne[:, 2]
+    df_plot['Cluster'] = clusters
+    
+    # Color map sesuai dengan kategori penjualan
+    color_map = {
+        'Sangat Rendah': '#FF4136',  # Warna merah
+        'Rendah': '#2ECC40',         # Warna hijau
+        'Cukup': '#0074D9',          # Warna biru
+        'Tinggi': '#FF851B',         # Warna oranye
+        'Sangat Tinggi': '#B10DC9',  # Warna ungu
+    }
+    
+    fig = go.Figure()
+
+    # Urutkan kategori dari "Sangat Rendah" hingga "Sangat Tinggi"
+    kategori_terurut = ['Sangat Rendah', 'Rendah', 'Cukup', 'Tinggi', 'Sangat Tinggi']
+
+    # Buat visualisasi untuk setiap kategori sesuai urutan
+    for category in kategori_terurut:
+        if category in df_plot['Kategori_Penjualan'].unique():
+            category_data = df_plot[df_plot['Kategori_Penjualan'] == category]
+            fig.add_trace(go.Scatter3d(
+                x=category_data['x'],
+                y=category_data['y'],
+                z=category_data['z'],
+                mode='markers',
+                marker=dict(size=4, color=color_map[category], opacity=0.7),
+                text=category_data['Merek'] + ' - ' + category_data['Tipe'] + '<br>Kategori: ' + category +
+                     '<br>Bulan: ' + category_data['Bulan'].astype(str) + '<br>Tahun: ' + category_data['Tahun'].astype(str),
+                hoverinfo='text',
+                name=category
+            ))
+
+    fig.update_layout(
+        title='Visualisasi 3D Berdasarkan Kategori Penjualan menggunakan t-SNE 2020 - 2024',
+        scene=dict(
+            xaxis_title='t-SNE Dimension 1',
+            yaxis_title='t-SNE Dimension 2',
+            zaxis_title='t-SNE Dimension 3',
+        ),
+        legend_title='Kategori Penjualan',
+        height=800,
+        margin=dict(r=20, b=10, l=10, t=40)
+    )
+
+    return fig
+
+
+def visualize_tsne_per_tahun(df):
+    features = ['Jumlah_Stok', 'Jumlah_Terjual', 'Persentase_Jumlah_Terjual']
+    df_numeric = df[features].copy()
+    df_numeric = df_numeric.fillna(df_numeric.median())
+    X_normalized = (df_numeric.values - df_numeric.values.mean(axis=0)) / df_numeric.values.std(axis=0)
+
+    tsne = TSNE(n_components=2, random_state=42)
+    X_tsne = tsne.fit_transform(X_normalized)
+
+    df['x'] = X_tsne[:, 0]
+    df['y'] = X_tsne[:, 1]
+
+    years = df['Tahun'].unique()
+    rows = (len(years) + 1) // 2  # Atur baris berdasarkan jumlah tahun
+    fig = make_subplots(
+        rows=rows, cols=2,
+        subplot_titles=[f"Tahun {year}" for year in years],
+        vertical_spacing=0.1,
+        horizontal_spacing=0.1
+    )
+
+    # Urutkan kategori dari "Sangat Rendah" hingga "Sangat Tinggi"
+    kategori_terurut = ['Sangat Rendah', 'Rendah', 'Cukup', 'Tinggi', 'Sangat Tinggi']
+    
+    color_map = {
+        'Sangat Rendah': '#FF4136',
+        'Rendah': '#2ECC40',
+        'Cukup': '#0074D9',
+        'Tinggi': '#FF851B',
+        'Sangat Tinggi': '#B10DC9',
+    }
+
+    # Track legend visibility untuk setiap kategori
+    legend_visibility = {kategori: True for kategori in kategori_terurut}
+
+    for i, year in enumerate(years):
+        df_year = df[df['Tahun'] == year]
+        row = (i // 2) + 1
+        col = (i % 2) + 1
+
+        for category in kategori_terurut:
+            if category in df_year['Kategori_Penjualan'].unique():
+                category_data = df_year[df_year['Kategori_Penjualan'] == category]
+                fig.add_trace(go.Scatter(
+                    x=category_data['x'],
+                    y=category_data['y'],
+                    mode='markers',
+                    marker=dict(size=8, color=color_map.get(category, 'grey'), opacity=0.7),
+                    text=category_data['Merek'] + ' - ' + category_data['Tipe'] + '<br>Kategori: ' + category +
+                         '<br>Bulan: ' + category_data['Bulan'].astype(str) + '<br>Tahun: ' + category_data['Tahun'].astype(str),
+                    hoverinfo='text',
+                    name=category,
+                    showlegend=legend_visibility[category]  # Tampilkan legend sekali untuk setiap kategori
+                ), row=row, col=col)
+                
+                # Matikan legend setelah pertama kali muncul
+                legend_visibility[category] = False
+
+    fig.update_layout(
+        title='Visualisasi t-SNE Berdasarkan Tahun',
+        height=600 * rows,
+        showlegend=True,  # Aktifkan legend
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)  # Letakkan legend di bawah grid
+    )
+
+    return fig
+
+
+
+
 def visualize_tsne_by_brand(df, clusters):
     features = ['Jumlah_Stok', 'Jumlah_Terjual', 'Persentase_Jumlah_Terjual']
     df_numeric = df[features].copy()
@@ -186,154 +380,54 @@ def visualize_tsne_by_brand(df, clusters):
         horizontal_spacing=0.05
     )
 
+    # Warna berdasarkan kategori penjualan
     color_map = {
-        0: '#FF4136',
-        1: '#2ECC40',
-        2: '#0074D9',
-        3: '#FF851B',
-        4: '#B10DC9',
+        'Sangat Rendah': '#FF4136',  # Merah
+        'Rendah': '#2ECC40',         # Hijau
+        'Cukup': '#0074D9',          # Biru
+        'Tinggi': '#FF851B',         # Oranye
+        'Sangat Tinggi': '#B10DC9',  # Ungu
     }
+
+    # Urutkan kategori dari "Sangat Rendah" hingga "Sangat Tinggi"
+    kategori_terurut = ['Sangat Rendah', 'Rendah', 'Cukup', 'Tinggi', 'Sangat Tinggi']
+
+    # Track legend visibility untuk setiap kategori
+    legend_visibility = {kategori: True for kategori in kategori_terurut}
 
     for i, merek in enumerate(merek_list[:rows*cols]):
         df_merek = df[df['Merek'] == merek]
-        fig.add_trace(
-            go.Scatter(
-                x=df_merek['x'], 
-                y=df_merek['y'], 
-                mode='markers', 
-                marker=dict(size=6, color=[color_map[cluster] for cluster in df_merek['Cluster']], opacity=0.7),
-                text=df_merek['Tipe'] + '<br>Kategori: ' + df_merek['Kategori_Penjualan'] +
-                     '<br>Bulan: ' + df_merek['Bulan'].astype(str) + '<br>Tahun: ' + df_merek['Tahun'].astype(str),
-                hoverinfo='text',
-                showlegend=False
-            ),
-            row=(i//cols)+1, col=(i%cols)+1
-        )
+
+        # Plot berdasarkan kategori penjualan dengan urutan yang benar
+        for category in kategori_terurut:
+            if category in df_merek['Kategori_Penjualan'].unique():
+                category_data = df_merek[df_merek['Kategori_Penjualan'] == category]
+                fig.add_trace(
+                    go.Scatter(
+                        x=category_data['x'], 
+                        y=category_data['y'], 
+                        mode='markers', 
+                        marker=dict(size=6, color=color_map.get(category, 'grey'), opacity=0.7),
+                        text=category_data['Tipe'] + '<br>Kategori: ' + category_data['Kategori_Penjualan'] +
+                             '<br>Bulan: ' + category_data['Bulan'].astype(str) + '<br>Tahun: ' + category_data['Tahun'].astype(str),
+                        hoverinfo='text',
+                        name=category,
+                        showlegend=legend_visibility[category]  # Tampilkan legend sekali untuk setiap kategori
+                    ),
+                    row=(i//cols)+1, col=(i%cols)+1
+                )
+                
+                # Matikan legend setelah pertama kali muncul
+                legend_visibility[category] = False
 
     fig.update_layout(
         title_text=f"Visualisasi t-SNE Berdasarkan Merek {df['Toko'].iloc[0]} 2020 - 2024",
         height=600 * rows,
-        showlegend=False
+        showlegend=True,  # Aktifkan legend
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)  # Letakkan legend di bawah grid
     )
 
     return fig
-
-
-# Visualisasi 3D berdasarkan cluster
-def visualize_clusters_3d(df, clusters):
-    features = ['Jumlah_Stok', 'Jumlah_Terjual', 'Persentase_Jumlah_Terjual']
-    df_numeric = df[features].copy()
-    
-    for col in df_numeric.columns:
-        df_numeric[col] = pd.to_numeric(df_numeric[col], errors='coerce')
-    
-    df_numeric = df_numeric.fillna(df_numeric.median())
-    X_normalized = (df_numeric.values - df_numeric.values.mean(axis=0)) / df_numeric.values.std(axis=0)
-    
-    tsne = TSNE(n_components=3, random_state=42)
-    X_tsne = tsne.fit_transform(X_normalized)
-    
-    df_plot = df[['Merek', 'Tipe', 'Kategori_Penjualan', 'Bulan', 'Tahun']].copy()
-    df_plot['x'] = X_tsne[:, 0]
-    df_plot['y'] = X_tsne[:, 1]
-    df_plot['z'] = X_tsne[:, 2]
-    df_plot['Cluster'] = clusters
-    
-    color_map = {
-        0: '#FF4136',  
-        1: '#2ECC40',  
-        2: '#0074D9',  
-        3: '#FF851B',  
-        4: '#B10DC9',  
-    }
-    
-    fig = go.Figure()
-
-    for cluster in range(5):  
-        cluster_data = df_plot[df_plot['Cluster'] == cluster]
-        fig.add_trace(go.Scatter3d(
-            x=cluster_data['x'],
-            y=cluster_data['y'],
-            z=cluster_data['z'],
-            mode='markers',
-            marker=dict(size=4, color=color_map[cluster], opacity=0.7),
-            text=cluster_data['Merek'] + ' - ' + cluster_data['Tipe'] + '<br>Kategori: ' + cluster_data['Kategori_Penjualan'] +
-                 '<br>Bulan: ' + cluster_data['Bulan'].astype(str) + '<br>Tahun: ' + cluster_data['Tahun'].astype(str),
-            hoverinfo='text',
-            name=f'Cluster {cluster}'
-        ))
-
-    fig.update_layout(
-        title='Visualisasi 3D 5 Cluster Utama BIRCH menggunakan t-SNE 2020 - 2024',
-        scene=dict(
-            xaxis_title='t-SNE Dimension 1',
-            yaxis_title='t-SNE Dimension 2',
-            zaxis_title='t-SNE Dimension 3',
-        ),
-        legend_title='Clusters',
-        height=800,
-        margin=dict(r=20, b=10, l=10, t=40)
-    )
-
-    return fig
-
-# Visualisasi t-SNE per tahun
-def visualize_tsne_per_tahun(df):
-    features = ['Jumlah_Stok', 'Jumlah_Terjual', 'Persentase_Jumlah_Terjual']
-    df_numeric = df[features].copy()
-    df_numeric = df_numeric.fillna(df_numeric.median())
-    X_normalized = (df_numeric.values - df_numeric.values.mean(axis=0)) / df_numeric.values.std(axis=0)
-
-    tsne = TSNE(n_components=2, random_state=42)
-    X_tsne = tsne.fit_transform(X_normalized)
-
-    df['x'] = X_tsne[:, 0]
-    df['y'] = X_tsne[:, 1]
-
-    years = df['Tahun'].unique()
-    rows = (len(years) + 1) // 2  # Atur baris berdasarkan jumlah tahun
-    fig = make_subplots(
-        rows=rows, cols=2,
-        subplot_titles=[f"Tahun {year}" for year in years],
-        vertical_spacing=0.1,
-        horizontal_spacing=0.1
-    )
-
-    color_map = {
-        'Sangat Rendah': '#FF4136',
-        'Rendah': '#2ECC40',
-        'Cukup': '#0074D9',
-        'Tinggi': '#FF851B',
-        'Sangat Tinggi': '#B10DC9',
-    }
-
-    for i, year in enumerate(years):
-        df_year = df[df['Tahun'] == year]
-        row = (i // 2) + 1
-        col = (i % 2) + 1
-
-        for category in df_year['Kategori_Penjualan'].unique():
-            category_data = df_year[df_year['Kategori_Penjualan'] == category]
-            fig.add_trace(go.Scatter(
-                x=category_data['x'],
-                y=category_data['y'],
-                mode='markers',
-                marker=dict(size=8, color=color_map.get(category, 'grey'), opacity=0.7),
-                text=category_data['Merek'] + ' - ' + category_data['Tipe'] + '<br>Kategori: ' + category +
-                     '<br>Bulan: ' + category_data['Bulan'].astype(str) + '<br>Tahun: ' + category_data['Tahun'].astype(str),
-                hoverinfo='text',
-                name=category
-            ), row=row, col=col)
-
-    fig.update_layout(
-        title='Visualisasi t-SNE Berdasarkan Tahun',
-        height=600 * rows,
-        showlegend=False
-    )
-
-    return fig
-
-
 
 
 
@@ -347,27 +441,17 @@ def visualisasi():
 
     query = f"""
         SELECT 
-            IFNULL(data.Merek, '-') AS Merek,
-            IFNULL(data.Tipe, '-') AS Tipe,
-            IFNULL(data.Bulan, '-') AS Bulan,
-            IFNULL(data.Tahun, '-') AS Tahun,
-            IFNULL(CAST(data.Jumlah_Stok AS DECIMAL(10,2)), 0) AS Jumlah_Stok,
-            IFNULL(CAST(data.Jumlah_Terjual AS DECIMAL(10,2)), 0) AS Jumlah_Terjual,
-            IFNULL(CAST(data.Harga_Satuan_Rp AS DECIMAL(15,2)), 0) AS Harga_Satuan_Rp,
-            IFNULL(CAST((data.Jumlah_Terjual * data.Harga_Satuan_Rp) AS DECIMAL(20,2)), 0) AS total_penjualan,
-            IFNULL(data.toko, '-') AS Toko,
-            IFNULL(CAST(data_spesifikasi.Kamera_Utama_MP AS DECIMAL(5,2)), 0) AS Kamera_Utama_MP,
-            IFNULL(CAST(data_spesifikasi.Kamera_Depan_MP AS DECIMAL(5,2)), 0) AS Kamera_Depan_MP,
-            IFNULL(data_spesifikasi.RAM, '-') AS RAM,
-            IFNULL(data_spesifikasi.Memori_Internal, '-') AS Memori_Internal,
-            IFNULL(CAST(data_spesifikasi.Baterai_mAh AS DECIMAL(10,2)), 0) AS Baterai_mAh,
-            IFNULL(data_spesifikasi.Jenis_Layar, '-') AS Jenis_Layar
-        FROM data
-        LEFT JOIN 
-            data_spesifikasi 
-        ON 
-            data.Tipe = data_spesifikasi.Tipe
-        WHERE data.toko = %s
+        IFNULL(data.Merek, '-') AS Merek,
+        IFNULL(data.Tipe, '-') AS Tipe,
+        IFNULL(data.Bulan, '-') AS Bulan,
+        IFNULL(data.tahun, '-') AS Tahun,
+        IFNULL(CAST(data.Jumlah_Stok AS DECIMAL(10,2)), 0) AS Jumlah_Stok,
+        IFNULL(CAST(data.Jumlah_Terjual AS DECIMAL(10,2)), 0) AS Jumlah_Terjual,
+        IFNULL(CAST(data.Harga_Satuan_Rp AS DECIMAL(15,2)), 0) AS Harga_Satuan_Rp,
+        IFNULL(CAST((data.Jumlah_Terjual * data.Harga_Satuan_Rp) AS DECIMAL(20,2)), 0) AS total_penjualan,
+        IFNULL(data.toko, '-') AS toko
+    FROM data
+    WHERE data.toko = %s
     """
     df = execute_query_to_dataframe(connection, query, (store,))
 
@@ -442,36 +526,24 @@ def perform_clustering_route():
         IFNULL(CAST(data.Jumlah_Terjual AS DECIMAL(10,2)), 0) AS Jumlah_Terjual,
         IFNULL(CAST(data.Harga_Satuan_Rp AS DECIMAL(15,2)), 0) AS Harga_Satuan_Rp,
         IFNULL(CAST((data.Jumlah_Terjual * data.Harga_Satuan_Rp) AS DECIMAL(20,2)), 0) AS total_penjualan,
-        IFNULL(data.toko, '-') AS toko,
-        IFNULL(CAST(data_spesifikasi.Kamera_Utama_MP AS DECIMAL(5,2)), 0) AS Kamera_Utama_MP,
-        IFNULL(CAST(data_spesifikasi.Kamera_Depan_MP AS DECIMAL(5,2)), 0) AS Kamera_Depan_MP,
-        IFNULL(data_spesifikasi.RAM, '-') AS RAM,
-        IFNULL(data_spesifikasi.Memori_Internal, '-') AS Memori_Internal,
-        IFNULL(CAST(data_spesifikasi.Baterai_mAh AS DECIMAL(10,2)), 0) AS Baterai_mAh,
-        IFNULL(data_spesifikasi.Jenis_Layar, '-') AS Jenis_Layar
+        IFNULL(data.toko, '-') AS toko
     FROM data
-    LEFT JOIN 
-        data_spesifikasi 
-    ON 
-        data.Tipe = data_spesifikasi.Tipe
     WHERE data.toko = %s
     """
     
     connection = get_db_connection()
     if connection and connection.is_connected():
         df = execute_query_to_dataframe(connection, query, (store_name,))
+        print(len(df))
         if df is not None and not df.empty:
             # Konversi kolom numerik untuk memastikan penanganan sebagai float
             df['Jumlah_Stok'] = df['Jumlah_Stok'].astype(float)
             df['Jumlah_Terjual'] = df['Jumlah_Terjual'].astype(float)
             df['Harga_Satuan_Rp'] = df['Harga_Satuan_Rp'].astype(float)
             df['total_penjualan'] = df['total_penjualan'].astype(float)
-            df['Kamera_Utama_MP'] = df['Kamera_Utama_MP'].astype(float)
-            df['Kamera_Depan_MP'] = df['Kamera_Depan_MP'].astype(float)
-            df['Baterai_mAh'] = df['Baterai_mAh'].astype(float)
-
             df['Persentase_Jumlah_Terjual'] = (df['Jumlah_Terjual'] / df['Jumlah_Stok']) * 100
             df['Kategori_Penjualan'] = df['Persentase_Jumlah_Terjual'].apply(categorize_sales_percentage)
+            
             df = perform_clustering(df, threshold)
             
             response_data = df[['Merek', 'Tipe', 'Bulan', 'Persentase_Jumlah_Terjual', 'Kategori_Penjualan', 'Cluster', 'Tahun']].to_dict(orient='records')
@@ -611,7 +683,7 @@ def fetch_data(nama_toko):
     LEFT JOIN 
         data_spesifikasi 
     ON 
-        data.Tipe = data_spesifikasi.Tipe
+        data.Tipe = data_spesifikasi.Tipe and data.Merek = data_spesifikasi.Merek
     WHERE 
         data.toko = %s;
     """
@@ -668,7 +740,7 @@ def fetch_data(nama_toko):
                 "Baterai_mAh": float(row["Baterai_mAh"]),
                 "Jenis_Layar": row["Jenis_Layar"]
             }
-        print(len(data))
+        # print(len(data))
         # Mengembalikan data sebagai JSON terstruktur
         return jsonify({"data": data, "message": "Data fetched successfully"})
     else:
