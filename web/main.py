@@ -80,15 +80,15 @@ def perform_clustering(df, threshold):
 
 def visualize_sales_distribution_combined(df):
     color_mapping = {
-        'Sangat Tinggi': 'maroon',
-        'Tinggi': 'salmon',
-        'Cukup': 'gold',
+        'Sangat Rendah': 'blue',
         'Rendah': 'green',
-        'Sangat Rendah': 'blue'
+        'Cukup': 'gold',
+        'Tinggi': 'salmon',
+        'Sangat Tinggi': 'maroon'
     }
 
-    # Urutkan kategori sesuai dengan urutan yang diinginkan
-    kategori_terurut = ['Sangat Tinggi', 'Tinggi', 'Cukup', 'Rendah', 'Sangat Rendah']
+    # Urutkan kategori dari 'Sangat Rendah' hingga 'Sangat Tinggi'
+    kategori_terurut = ['Sangat Rendah', 'Rendah', 'Cukup', 'Tinggi', 'Sangat Tinggi']
 
     kategori_per_merek = df.groupby(['Merek', 'Kategori_Penjualan']).size().unstack(fill_value=0)
     total_per_merek = kategori_per_merek.sum(axis=1)
@@ -111,13 +111,14 @@ def visualize_sales_distribution_combined(df):
     fig = go.Figure(data=bar_data)
     fig.update_layout(
         barmode='stack',
-        title=f'Distribusi Frekuensi Kemunculan Kategori Penjualan per Merek Untuk {df["Toko"].iloc[0]}  2020 - 2024',
+        title=f'Distribusi Frekuensi Kemunculan Kategori Penjualan per Merek',
         xaxis_title='Merek',
         yaxis_title='Jumlah Produk',
         height=900
     )
 
     return fig
+
 
 
 # Visualisasi t-SNE berdasarkan kategori penjualan
